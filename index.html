@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>차팅 보조 태그 체크리스트</title>
+<style>
+:root { --primary-color: #0f4c81; --primary-light: #e8f0fe; --bg-color: #f8fafc; --card-bg: #ffffff; --text-color: #1e293b; --text-muted: #64748b; --border-color: #cbd5e1; --accent-color: #e67e22; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+body { background-color: var(--bg-color); color: var(--text-color); padding: 20px 15px; display: flex; justify-content: center; min-height: 100vh; }
+.app-container { width: 100%; max-width: 1150px; background: var(--card-bg); border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; overflow: hidden; }
+header { background-color: var(--primary-color); color: white; padding: 20px; text-align: center; }
+header h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+header p { font-size: 13px; opacity: 0.9; }
+.tab-container { display: flex; background: #e2e8f0; padding: 6px 6px 0 6px; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; }
+.tab-btn { flex: 1; min-width: 120px; padding: 12px 8px; border: none; background: #f1f5f9; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-muted); border-radius: 8px 8px 0 0; margin-right: 4px; margin-bottom: 4px; text-align: center; }
+.tab-btn.active { background: var(--card-bg); color: var(--primary-color); border-top: 3px solid var(--primary-color); margin-bottom: 0; }
+.main-content { padding: 24px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.grid-layout { display: grid; grid-template-columns: 1fr; gap: 24px; }
+@media (min-width: 800px) { .grid-layout { grid-template-columns: 1.15fr 1fr; } }
+.section-title { font-size: 14px; font-weight: 700; color: var(--primary-color); margin-bottom: 10px; border-bottom: 2px solid var(--primary-light); padding-bottom: 4px; }
+.form-group { background: #f1f5f9; padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; }
+.tag-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.tag-btn { padding: 9px 14px; border-radius: 20px; border: 1px solid var(--border-color); background: #ffffff; font-size: 12.5px; font-weight: 600; cursor: pointer; color: var(--text-color); transition: all .12s ease; }
+.tag-btn:hover { background: var(--primary-light); border-color: var(--primary-color); }
+.tag-btn.active { background: var(--primary-color); color: #fff; border-color: var(--primary-color); }
+.tag-btn.big { width: 100%; text-align: left; padding: 14px 16px; font-size: 13.5px; }
+.tag-btn.accent.active { background: var(--accent-color); border-color: var(--accent-color); }
+.subtab-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px dashed var(--border-color); }
+.subtab-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border-color); background: #f8fafc; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--text-muted); }
+.subtab-btn.active { background: var(--primary-color); color: #fff; border-color: var(--primary-color); }
+.desc-line { font-size: 11.5px; color: var(--text-muted); margin: -4px 0 10px 2px; }
+.output-panel { display: flex; flex-direction: column; background: #fafafa; border: 1px dashed var(--border-color); border-radius: 8px; padding: 16px; }
+.chart-textarea { width: 100%; height: 460px; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12.5px; line-height: 1.5; resize: none; background-color: #ffffff; margin-bottom: 14px; white-space: pre-wrap; }
+.btn-copy { background-color: var(--primary-color); color: white; border: none; padding: 14px; font-size: 14px; font-weight: 600; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: rgba(15, 76, 129, 0.95); color: white; padding: 12px 24px; border-radius: 30px; font-size: 13px; font-weight: 600; transition: transform 0.3s ease; z-index: 1000; opacity: 0; }
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.ref-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 16px; }
+.ref-table th, .ref-table td { border: 1px solid var(--border-color); padding: 6px 8px; text-align: left; }
+.ref-table th { background: var(--primary-light); color: var(--primary-color); font-size: 12px; }
+.note-box { background: #fff7ed; border: 1px dashed var(--accent-color); border-radius: 8px; padding: 12px 14px; font-size: 12.5px; margin-bottom: 16px; line-height: 1.6; }
+.note-box b { color: #9a3412; }
+.info-box { background: #eaf2fb; border: 1px dashed var(--primary-color); border-radius: 8px; padding: 12px 14px; font-size: 12.5px; margin-bottom: 16px; line-height: 1.6; color: #0f4c81; }
+.info-box b { color: #0a3a63; }
+.text-input { width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 12.5px; margin-bottom: 10px; }
+.inline-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.inline-row .text-input { margin-bottom: 0; }
+</style>
+</head>
+<body>
+<div id="lockScreen" style="position:fixed;inset:0;background:#0f4c81;display:flex;align-items:center;justify-content:center;z-index:9999;">
+  <div style="background:#fff;padding:32px 28px;border-radius:16px;width:90%;max-width:320px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+    <div style="font-size:17px;font-weight:700;color:#0f4c81;margin-bottom:6px;">차팅 보조 태그 체크리스트</div>
+    <div style="font-size:12.5px;color:#64748b;margin-bottom:16px;">비밀번호를 입력해주세요</div>
+    <input id="lockPassword" type="password" inputmode="numeric" placeholder="비밀번호" style="width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;text-align:center;margin-bottom:10px;box-sizing:border-box;">
+    <button id="lockSubmitBtn" style="width:100%;background:#0f4c81;color:#fff;border:none;padding:11px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">입장</button>
+    <div id="lockError" style="color:#c0392b;font-size:12px;margin-top:8px;display:none;">비밀번호가 올바르지 않습니다.</div>
+  </div>
+</div>
+<div class="app-container" id="appContainer" style="display:none;">
+<header>
+<h1>차팅 보조 태그 체크리스트</h1>
+<p>클릭 한 번으로 차팅 문구를 완성하고 복사하는 도구</p>
+</header>
+<div class="tab-container" id="tabBar"></div>
+<div class="main-content" id="mainContent"></div>
+</div>
+<div id="toast" class="toast">클립보드에 차팅 문구가 복사되었습니다.</div>
+
+<script>
+const SITE_PASSWORD = "2575";
+function tryUnlock(){
+  const input = document.getElementById('lockPassword');
+  const err = document.getElementById('lockError');
+  if(input.value === SITE_PASSWORD){
+    sessionStorage.setItem('chartToolUnlocked', 'yes');
+    document.getElementById('lockScreen').style.display = 'none';
+    document.getElementById('appContainer').style.display = '';
+  } else {
+    err.style.display = 'block';
+    input.value = '';
+    input.focus();
+  }
+}
+if(sessionStorage.getItem('chartToolUnlocked') === 'yes'){
+  document.getElementById('lockScreen').style.display = 'none';
+  document.getElementById('appContainer').style.display = '';
+}
+document.getElementById('lockSubmitBtn').onclick = tryUnlock;
+document.getElementById('lockPassword').addEventListener('keydown', function(e){ if(e.key === 'Enter') tryUnlock(); });
+
+/* =========================================================
+   0. 최상위 탭 정의 (7개)
+   ========================================================= */
+/* =========================================================
+   0-1. TABS
+   ========================================================= */
+const TABS = [
+  { id:"jabo", label:"자보 차팅" },
+  { id:"manualTherapy", label:"수기요법" },
+  { id:"mriRequest", label:"MRI 검사의뢰양식" },
+  { id:"muscleTexture", label:"경근무늬검사" },
+  { id:"insuranceChart", label:"의보차팅" },
+  { id:"fluid", label:"수액설명" },
+  { id:"westernReferral", label:"양방의뢰" },
+  { id:"referenceNotes", label:"유의사항" },
+];
+
+/* =========================================================
+   1. 고정 텍스트 데이터
+   ========================================================= */
+const HERBS = [
+  { tag:"참잘함활혈탕가미", line:"참잘함활혈탕가미 bid 어혈제 (활혈거어제) : 맥부삭 설자 혈어증 맥현긴 암홍설 맥침실 설자태황 102" },
+  { tag:"참잘함건근탕가미", line:"참잘함건근탕가미 bid 온리제(온경산한제) : 맥부긴 설태박백 풍한증 002" },
+  { tag:"참잘함정척탕가미", line:"참잘함정척탕가미 bid 거습제(온화수습제) : 맥활 설태후 한습증 005" },
+  { tag:"참잘함안신평위탕가미", line:"참잘함안신평위탕가미 bid 이기제(행기제) : 맥현 설태니 기체증 094" },
+  { tag:"활근탕가미", line:"활근탕가미 bid 거담제(조습화담제) : 맥활 설질담 습담증 157" },
+  { tag:"참잘함갈근탕가미", line:"참잘함갈근탕가미 bid 거습제(청열거습제) : 맥삭 설황니 습열증 006" },
+  { tag:"참잘함사백산가미", line:"참잘함사백산가미 bid 해표제(신량해표제) : 맥삭 설황 풍열증 003" },
+  { tag:"평안탕가미", line:"평안탕가미 bid 안신제(보양안신제) : 맥침 설태박백 심양허증 138" },
+  { tag:"제통탕가미", line:"제통탕가미 bid 거풍풍습제 : 맥부삭 설후 풍습증 004" },
+];
+
+const JABO_SIMPLE_BLOCK = `#1.필요시 단순추나
+- 경추 / 가동제한 / MB / 앙와위 경추 JS신연기법
+- 요추 / 신연제한 / TD / 복와위 요천관절 신연기법
+- 요추 / 단축 / ST / 요방형근, 기립근 굴곡-신연기법
+- VAS 20% 호전. // ROM 굴곡 30% 호전. 신전 변화 없음 측굴 30% 호전. 회전 10% 호전.`;
+
+const JABO_COMPLEX_BLOCK = `***영상검사상, 퇴행성추간판탈출/척추협착 소견 있음. 자동차 사고 이전, 관련 증상이 없는 상태로 일상생활에 문제가 없었으나 사고 직후 추간판탈출증/척추협착과 연관된 상기 주소증상이 발생하여, 복잡추나를 시행함.
+
+: 복잡 추나 해당하는 임상소견
+-경추부 : Spurling +/+
+ROM 굴곡 30 신전 10 측굴 45/45 회전 60/60
+-요추부 : SLR 60/60 Bragard+/+
+ROM 굴곡 45 통증 신전 10 측굴 20/20 회전 45/45
+
+#1.필요시 복잡추나
+사각근 견갑거근 상부승모근 견갑하근 단축 - 근막이완 / 장요근 요방형근 중둔근 단축 - 근막이완
+우측 장골 후방회전 - 복와위 장골 교정기법/경추 요추 신연 제한 - 복와위 경추 신연기법. 복와위 요천관절 신연기법/요추 관절 비중립성 기능부전(L 5 ERSL ) - 측와위 요추 교정기법/경추 관절 비중립성 기능부전 (C ERSL )- 앙와위 경추 교정기법/치료후 경요추변위 15% 호전되어서 추가적인 자극을 시행하지 않음, VAS 20% 호전. // ROM 굴곡 30% 호전. 신전 변화 없음 측굴 30% 호전. 회전 10% 호전.
+기능부전은 재현될 수 있으므로 추후 반복적인 치료를 요함
+
+***경추/요추 추간판탈출/협착증 있어 교통사고 통증회복 느릴거라 예상됨.`;
+
+const JABO_ADMISSION_LINE = "통증 심하고 관절가동범위 줄어들며, 경추통과 요통으로 일상생활이 어려운편으로 자동차 사고 손상에 대한 입원 경과관찰 필요하다 생각되어 입원 치료 하기로 함.";
+
+const JABO_TEMPLATE = (therapyBlock, admissionType, herbLine, herbName) => `<C-Spine check>
+ROM
+Flexion 30 Extension 10 Lat. bending 45/45 Rotation 60/60
+NRS 6
+
+<L-spine test>
+ROM
+Flexion 30 Extension 10 Lat. bending 20/20 Rotation 45/45
+NRS 6
+${admissionType === 'inpatient' ? JABO_ADMISSION_LINE : ''}
+
+**교통사고시 인대, 심부근육손상 및 어혈기전 설명함.
+초기 1-2주일은 증상 악화될 수 있으니 될수록 무리하지 말고 안정취하라 교육함.
+
+O> 미판독.
+★★★체형분석내용포함. 추후 재평가 필요.
+
+P>
+${therapyBlock}
+#2.약침 : 중성어혈 상지부 2부위시 요배부추가
+#3.침치료
+A-Tx / EA / IR : 경혈침술2체간(곤륜/신수) 척추간침술(요양관)
+습식부항(경추부, 요추부) 기기구술(경추부, 요배부)
+#4.한약&변증 :
+${herbLine || "(좌측에서 한약을 선택해주세요)"}
+
+상기 환자 수상 후 경과 오래지나지 않아 우선 ${herbName || "[처방명]"} 처방 후 추후 재판단 요함.
+통증치료 위해 상기 변증으로 판단 후 상기 한약 처방 필요성 설명하고 환자 동의 후 처방함.`;
+
+const COMPLEX_TEXT = `***영상검사상, 퇴행성추간판탈출/척추협착 소견 있음. 자동차 사고 이전, 관련 증상이 없는 상태로 일상생활에 문제가 없었으나 사고 직후 추간판탈출증/척추협착과 연관된 상기 주소증상이 발생하여, 복잡추나를 시행함.
+
+: 복잡 추나 해당하는 임상소견
+-경추부 : Spurling +/+
+ROM 굴곡 30 신전 10 측굴 45/45 회전 60/60
+-요추부 : SLR 60/60 Bragard+/+
+ROM 굴곡 45 통증 신전 10 측굴 20/20 회전 45/45
+
+#1.필요시 복잡추나
+사각근 견갑거근 상부승모근 견갑하근 단축 - 근막이완 / 장요근 요방형근 중둔근 단축 - 근막이완
+우측 장골 후방회전 - 복와위 장골 교정기법/경추 요추 신연 제한 - 복와위 경추 신연기법. 복와위 요천관절 신연기법/요추 관절 비중립성 기능부전(L 5 ERSL ) - 측와위 요추 교정기법/경추 관절 비중립성 기능부전 (C ERSL )- 앙와위 경추 교정기법/치료후 경요추변위 15% 호전되어서 추가적인 자극을 시행하지 않음, VAS 20% 호전. // ROM 굴곡 30% 호전. 신전 변화 없음 측굴 30% 호전. 회전 10% 호전.
+기능부전은 재현될 수 있으므로 추후 반복적인 치료를 요함
+
+***경추/요추 추간판탈출/협착증 있어 교통사고 통증회복 느릴거라 예상됨.`;
+
+const SIMPLE_TEXT = `#1.필요시 단순추나
+- 경추 / 가동제한 / MB / 앙와위 경추 JS신연기법
+- 요추 / 신연제한 / TD / 복와위 요천관절 신연기법
+- 요추 / 단축 / ST / 요방형근, 기립근 굴곡-신연기법
+- VAS 20% 호전. // ROM 굴곡 30% 호전. 신전 변화 없음 측굴 30% 호전. 회전 10% 호전.`;
+
+const DOIN_TEXT = `#1.필요시 도인운동요법 : 경추, 골반, 룸바롤, 이완.
+도인운동요법은 생활지도, 관리와 재발 감소 재활 등 지속성이 요구되는 상황에 활용되며 염좌에 의한 통증이 만성화되어 정상적인 동작에 제한이 있고, 통증이 호전과 악화를 반복하고 있으므로 생활지도 관리 재활등 지속성이 요구되는 상황으로 판단되어 도인운동요법을 시행함
+VAS 20% 호전. // ROM 굴곡 30% 호전. 신전 변화 없음 측굴 30% 호전. 회전 10% 호전.`;
+
+const MYOTENDON_TEXT = `#1.필요시 근건이완수기요법 - 긴장된 근육과 건 부위에 이완을 유도하는 수기요법을 실시함.`;
+
+const MANUAL_OPTIONS = ["수면/체위전환 시", "회전·굴곡 동작 시", "보행·기립 시", "상지거상 동작 시"];
+const jaboManualTemplate = (opt) => `교통사고로 발생한 염좌에 의한 환자 호소 증상이 기본물리치료·단순재활치료를 2주, 4회 이상 시행하였음에도 호전과 악화를 반복하며 ${opt || "[선택 필요]"} 통증으로 인한 기능제한이 지속되고 있어, 기본물리치료·단순재활치료 만으로는 개선이 어렵다고 판단되어 관절가동술 등 도수치료를 의뢰함.`;
+const sanjaeManualTemplate = (opt) => `산재로 발생한 상해에 대해 환자 호소 증상이 기본물리치료·단순재활치료를 2주, 4회 이상 시행하였음에도 호전과 악화를 반복하며 ${opt || "[선택 필요]"} 통증으로 인한 기능제한이 지속되고 있어, 기본물리치료·단순재활치료 만으로는 개선이 어렵다고 판단되어 관절가동술 등 도수치료를 의뢰함.`;
+
+const EXAM_PARTS = {
+  "L-spine": `* 환자 지속적 치료 및 안정 휴식에도 불구하고 하부요통 및 하지부 저림을 지속적으로 호소하여 X-ray 검사상의 이상 소견과 타박으로 인한 단순근육염좌 이외의 요추부 신경학적 이상 유무 확인을 위한 정밀검사 필요하리라 판단되어, L-spine MRI 시행하기로 함.
+SLR 45/65 Bragard +/-
+Patrick -/- Valsalva -
+ROM
+Flexion 45 통증 Extension 10
+Lat. bending 20/30 Rotation 35/55
+Neologic test
+Motor : intact
+Sensory : 좌둔부통증, 좌하지후면저림.`,
+  "C-spine": `* 환자 지속적 치료 및 및 안정 휴식에도 불구하고 경추통을 지속적으로 호소하여 X-ray 검사상의 이상 소견과 타박으로 인한 단순근육염좌 이외의 경추부 신경학적 이상 유무 확인을 위한 정밀검사 필요하리라 판단되어, C-spine MRI 시행하기로 함.
+Compression (+-) spurling +/-
+ROM
+Flexion 45 통증 Extension 10
+Lat. bending 20/20 Rotation 45/60
+Neologic test
+Motor : intact
+Sensory : 좌상지저림, 좌견갑내측저림.`,
+  "Hip Joint": `* 환자 집중적인치료 및 안정 휴식에도 불구하고 지속적인 허리 및 고관절 통증 호소하며 호전보이지 않아, X-ray 검사상의 이상 소견과 타박으로 인한 단순근육염좌 아닌 연부조직의 이상유무 확인하기 위한 정밀검사 필요하리라 사료되어 Hip joint MRI 검사 시행하기로 결정함.
+<Hip Joint P.E>
+FABER +-/-
+FADIR +-/-`,
+  "Elbow": `* 환자 집중적인치료 및 안정 휴식에도 불구하고 지속적인 팔꿈치 통증 호소하며 호전보이지 않아, X-ray 검사상의 이상 소견과 타박으로 인한 단순근육염좌 아닌 연부조직의 이상유무 확인하기 위한 정밀검사 필요하리라 사료되어 Elbow MRI 검사 시행하기로 결정함.
+<Elbow P.E>
+Cozen test +/-
+Collateral lig. test +/-`,
+  "Shoulder": `* 환자 집중적인치료 및 안정 휴식에도 불구하고 지속적인 견관절 통증 호소하며 호전보이지 않아, X-ray 검사상의 이상 소견과 타박으로 인한 단순근육염좌 아닌 견관절 부위 연부조직 이상유무 확인하기 위한 정밀검사 필요하리라 사료되어 Shoulder MRI 검사 시행하기로 결정함.
+<Shoulder P.E>
+Neer test +-/-
+Empty can test +/-
+Hawkins test +/-`,
+  "Wrist": `* 환자 집중적인치료 및 안정 휴식에도 불구하고 지속적인 손목 통증 호소하며 호전보이지 않음. 통증 지속되어, X-ray 검사상의 이상 소견과 타박으로 인한 단순근육염좌 아닌 연부조직의 이상유무 확인하기 위한 정밀검사 필요하리라 사료되어 Wrist MRI 검사 시행하기로 결정함.
+<Wrist P.E>
+Dorsiflexion 60/80
+Plantarflexion 30/40
+Finkelstein -/-`,
+  "Knee": `* 환자 집중적인치료 및 안정 휴식에도 불구하고 지속적인 슬관절 통증 호소하며 호전보이지 않음. 경구진통제 및 주사진통제 처치 후에도 통증 지속되어, X-ray 검사상의 이상 소견과 타박으로 인한 단순근육염좌 아닌 연부조직의 이상유무 확인하기 위한 정밀검사 필요하리라 사료되어 Knee MRI 검사 시행하기로 결정함.
+Knee Special test
+Anterior draw sign -/+-
+Posterior draw sign -/-
+Medial collateral ligament test -/-
+Lateral collateral ligament test -/+-
+Apley Compression Test -/+`,
+  "Ankle": `* 환자 집중적인치료 및 안정 휴식에도 불구하고 지속적인 발목 통증 호소하며 호전보이지 않음. 통증 지속되어, X-ray 검사상의 이상 소견과 타박으로 인한 단순근육염좌 아닌 연부조직의 이상유무 확인하기 위한 정밀검사 필요하리라 사료되어 Ankle MRI 검사 시행하기로 결정함.
+<Ankle P.E>
+Dorsiflexion 20/30
+Plantarflexion 70/80`
+};
+
+function mirrorPairs(text){ return text.replace(/([+\-0-9.]+)\/([+\-0-9.]+)/g, (m,a,b)=> b+'/'+a); }
+function duplicateFirstPairs(text){ return text.replace(/([+\-0-9.]+)\/([+\-0-9.]+)/g, (m,a)=> a+'/'+a); }
+function swapLR(text){ return text.replace(/[좌우]/g, ch => ch==='좌' ? '우' : '좌'); }
+function bothLR(text){ return text.replace(/[좌우]/g, '양측'); }
+const LR_PROTECT_WORDS = ["단순근육염좌"];
+function protectLRWords(text){
+  let out = text;
+  LR_PROTECT_WORDS.forEach((w,i)=>{ out = out.split(w).join('§P'+i+'§'); });
+  return out;
+}
+function restoreLRWords(text){
+  let out = text;
+  LR_PROTECT_WORDS.forEach((w,i)=>{ out = out.split('§P'+i+'§').join(w); });
+  return out;
+}
+function examTextForSide(baseText, side){
+  if(side === 'right') return restoreLRWords(swapLR(mirrorPairs(protectLRWords(baseText))));
+  if(side === 'both') return restoreLRWords(bothLR(duplicateFirstPairs(protectLRWords(baseText))));
+  return baseText;
+}
+
+const MUSCLE_TEXTURE = {
+  "경추부": `****경근무늬검사 검사 시행 사유
+
+상기 환자분 사고 이후 경추부 손상으로 인한 견갑부 방사통(초진 NRS 6 → 1차검사 NRS 6) 유지 양상이 지속되며 만성화 경향을 보여,
+경추 및 견갑대의 실질적인 변위 및 근육의 기능이상을 확인할 필요가 있다고 사료되어 경근무늬측정검사를 진행함.
+특히 경추부 손상이 견갑부로 연계되어 나타나는 이차적 증상의 객관적 평가를 위함.`,
+  "요추부": `****경근무늬검사 검사 시행 사유
+
+상기 환자분 사고 이후 요추부 손상으로 인한 양골반부 방사통(초진 NRS 6 → 1차검사 NRS 6) 유지 양상이 지속되며 만성화 경향을 보여,
+요추 및 골반대의 실질적인 변위 및 근육의 기능이상을 확인할 필요가 있다고 사료되어 경근무늬측정검사를 진행함.
+특히 요추부 손상이 골반대로 연계되어 나타나는 이차적 증상의 객관적 평가를 위함.`
+};
+
+const INSURANCE_GENERAL_TEXT = `S>
+#1.
+
+o/s)
+
+O>
+
+A> 맥부삭 설자 어혈 간음허
+
+P>
+#1.A-Tx / EA / IR : 경혈침술2체간(대장수,환도) 투자법침술(곤륜-태계) 척추간내침술(요양관)
+습식부항(요추부, 골반하지부) 기기구술(요추부)
+#2.필요시 복잡추나
+사각근 견갑거근 상부승모근 견갑하근 단축 - 근막이완 / 장요근 요방형근 중둔근 단축 - 근막이완
+우측 장골 후방회전 - 복와위 장골 교정기법/경추 요추 신연 제한 - 복와위 경추 신연기법. 복와위 요천관절 신연기법/요추 관절 비중립성 기능부전(L 5 ERSL ) - 측와위 요추 교정기법/경추 관절 비중립성 기능부전 (C ERSL )- 앙와위 경추 교정기법/치료후 경요추변위 15% 호전되어서 추가적인 자극을 시행하지 않음, 통증 10% 호전.
+기능부전은 재현될 수 있으므로 추후 반복적인 치료를 요함
+#3.필요시 약침 혹은 봉침
+#4.필요시 한약
+
+#.f/u
+- 치료하며 경과관찰 예정. 필요시 검사의뢰.
+------------------------------------------------------------
+<C-Spine check>
+ROM
+Flexion 30 Extension 10
+Lat. bending 45/45 Rotation 60/60
+Special test
+Compresion - Distraction -
+Valsalva - Spurling +-/+-
+Adson's -/- Swallowing -
+Motor/Sensory intact
+VAS 7
+
+<L-Spine check>
+ROM
+Flexion 30 Extension 10
+Lat. bending 20/20 Rotation 45/45
+Special test
+SLR 65/65
+Motor/Sensory intact
+VAS 7`;
+
+const DISC_STENOSIS_TEXT = `S>
+#1.
+
+o/s)
+
+O>
+
+A>
+
+맥부삭 설자 어혈 간음허
+
+P>
+#1.필요시 단순추나
+- 경추 / 가동제한 / MB / 앙와위 경추 JS신연기법
+- 요추 / 신연제한 / TD / 복와위 요천관절 신연기법
+- 요추 / 단축 / ST / 요방형근, 기립근 굴곡-신연기법
+- 치료 목표 달성되어 추가 자극 하지 않음
+#2.필요시 약침 혹은 봉침
+#3.필요시 한약
+#4.AT
+
+#7.f/u
+- 본원 디스크/협착증 치료 방법 설명함.
+- 뇨의 변의 8시간 이상 소실 및 항문부 주변 이상감각 발생시 반드시 상급병원 진료 필요함에 대해서 설명함
+- 치료기간 2-3개월 필요하다 설명함.
+- 치료하며 경과관찰 예정. 필요시 검사의뢰.
+
+------------------------------------------------------------
+<C-Spine check>
+ROM
+Flexion 30 Extension 10
+Lat. bending 45/45 Rotation 60/60
+Special test
+Compresion - Distraction -
+Valsalva - Spurling +-/+-
+Adson's -/- Swallowing -
+Motor/Sensory intact
+VAS 7
+
+<L-Spine check>
+ROM
+Flexion 50 Extension 20
+Lat. bending 45/45 Rotation 45/45
+Special test
+SLR 65/65
+Motor/Sensory intact
+VAS 7`;
+
+const FLUID_DESC = {
+  "백옥주사": "1. 백옥주사\n핵심 성분: 글루타치온 (Glutathione)\n효능 요약: 멜라닌 생성을 억제해 피부 톤을 맑게 개선(미백)하고 체내 활성산소를 제거합니다.",
+  "와인주사": "2. 와인주사\n핵심 성분: 고용량 비타민 B군 (특히 B12, B5, B6), 비타민 C, 마그네슘 / 본원에서는 B12\n효능 요약: 수액 색상이 와인빛을 띠며, 만성 피로 회복과 신경통(대상포진, 편두통 등) 완화에 도움을 줍니다.",
+  "마늘주사": "3. 마늘주사\n핵심 성분: 푸르설티아민 (Fursultamine / 활성비타민 B1)\n효능 요약: 피로 물질인 젖산을 분해하여 급성 피로 회복과 근육통 완화에 탁월합니다. (맞을 때 코끝에서 마늘 향이 잠시 나는 것이 특징입니다.)",
+  "신데렐라주사": "4. 신데렐라주사\n핵심 성분: 티옥트산 (Thioctic acid / 알파리포산)\n효능 요약: 강력한 항산화 작용으로 체지방 감소(다이어트 보조) 및 피부 노화 방지에 효과적입니다.",
+  "감초주사": "5. 감초주사\n핵심 성분: 글리시리진 (Glycyrrhizin), 글리신 (Glycine), L-시스테인 (L-Cysteine)\n효능 요약: 간 기능을 개선하여 체내 해독 작용을 돕고 두드러기나 알레르기성 피부 질환을 완화합니다."
+};
+const FLUID_TABLE = [
+  ["만성피로회복주사","N/S 250ml + 아르기닌 + 라이넥","10만"],
+  ["간기능개선","N/S 250ml + 라이넥2개","8만원"],
+  ["감기&해열","N/S 250ml + 지씨NAC2개 + 메가그린주 + 아세트아미노펜","10만"],
+  ["장염","N/S 250ml + 디펩티벤주","10만"],
+  ["프리미엄감기&해열","N/S 250ml + 지씨NAC2개 + 메가그린주 + 라이넥1개 + 아세트아미노펜 + 아르기닌","15만"],
+];
+
+const PAIN_SCRAMBLER_DX = [
+  ["대상포진후신경통","G53.0 (B02.2 병기)"],
+  ["당뇨병성 다발신경병증","G63.2* (E10.4/E11.4 원인상병)"],
+  ["복합부위통증증후군","G90.5"],
+  ["삼차신경통","G50.0"],
+  ["항암제유발 다발신경병증","G62.0 / G62.9"],
+  ["환지통","G54.6"],
+  ["악성종양 만성통증","C00-C97(주) + R52.1(부)","C00-C97"],
+  ["척추수술후증후군","M96.1"],
+  ["만성 척추·관절통","M54.5, M51.1 등 + R52.1/R52.2(부)","M54.5, M51.1 등"],
+  ["섬유근육통","M79.7"],
+];
+
+const CRYO_DX = [
+  ["근막통증증후군","M79.1"],
+  ["요추 추간판탈출증(방사통)","M51.1"],
+  ["경추 추간판탈출증(방사통)","M50.1"],
+  ["무릎 퇴행성관절염","M17.9 (일차성 M17.1)"],
+  ["테니스엘보","M77.1"],
+  ["골프엘보","M77.0"],
+  ["오십견","M75.0"],
+  ["족저근막염","M72.2"],
+  ["아킬레스건염","M76.6"],
+  ["손목건초염","M65.4 (상세불명 M65.9)"],
+  ["요추염좌","S33.5"],
+  ["발목염좌","S93.4"],
+  ["손목염좌","S63.5"],
+  ["경추염좌","S13.4"],
+  ["CRPS 1형","M89.0"],
+  ["CRPS 2형","G90.5"],
+  ["뇌졸중후 근경직","I69.-(주) + G24.8(부)"],
+];
+
+const SHOCKWAVE_DX = [
+  ["어깨관절","석회성 건염","M65.21"],
+  ["어깨관절","회전근개 건증","M75.1"],
+  ["팔꿈치 관절","외측상과염","M77.1"],
+  ["팔꿈치 관절","내측상과염","M77.0"],
+  ["고관절","대퇴골돌기윤활낭염","M70.6"],
+  ["고관절","둔부힘줄염","M76.0~M76.5"],
+  ["슬관절","슬개건염","M76.5"],
+  ["발목관절","아킬레스건염","M76.6"],
+  ["족부","족저근막염","M72.2"],
+  ["척추부","경추부 근막통증증후군","M79.180"],
+  ["척추부","요추부 근막통증증후군","M79.180"],
+];
+const SHOCKWAVE_CONTRA = ["임신","출혈성 질환 또는 항응고제 복용","악성종양 의심 부위","국소 감염/염증성 병변","개방성 성장판(소아·청소년)","심박동기 등 전자 임플란트 근접부위","감각저하/신경손상 부위"];
+
+const REFERENCE_NOTES = {
+  "자보(자동차보험) 잡다": [
+    "자보골절은 늑골 3주, 척추 4주 정도까지 입원 가능. 경우에 따라 1-2주 정도 연장 가능(상해진단주수지침에 따름)",
+    "사고일 기준 3개월(11주) 넘어가면 자보한약 삭감될 수 있음",
+    "1년 넘어 MR 찍으면 삭감",
+    "자보 골절이면 6개월 넘어도 주2회 가능",
+    "뇌진탕 코드는 오심·현훈·두통 있고 Br.CT 별무이상일 때만, 최초 진료 의료기관이 아니면 어려움, 의식소실 있어야 함 (현재는 한방에서 진단 불가)",
+    "입원환자가 외부 CT 찍으면 비용을 병원이 부담 → 적극 권유는 안 하고 원하면 보내주는 정도",
+    "외래는 의뢰지로 CT 찍어도 됨",
+    "자보 침술3종: 입원은 인정, 외래는 전부 삭감된 사례 있어 외래 자보는 침술3종 미투입",
+    "Bulging까지는 삭감됨 → 단순추나로 하고, Protrusion부터 복잡추나로 전환",
+    "수상일 기준 18일 이전엔 적외선 2부위, 이후 1부위",
+    "자보 엠알은 입원 중 1부위만 촬영. 한달에 한번만 의뢰하고, 달 넘어가더라도 의뢰 간 간격은 7일 정도 두는 것이 안전.",
+    "자보한약은 수상 후 12주 이내에만 가능",
+    "자보가 일반으로 진행되는 경우 자보코드로 수가 처방해야 함",
+    "자보 임신부는 치료 금지",
+    "재초진: 3개월 넘어가면 재초진 유도리 있음 → 자보 종료 후 재초진 잡을 때 가급적 다른 상병으로",
+    "자보파스는 1/2/3으로 처방(별도 코드), 1주일에 3일 간격 2번 가능. 번거로우니 가급적 피할 것.",
+    "(2026-05-01부터) 자보 입원환자 심사 까다로워짐 — 입원 필요성이 차트에 반드시 기재되어야 함",
+    "입원 필요한 심한통증 기준: NRS 6 이상, 보행 곤란 또는 ROM 제한",
+    "자보 신경차단술 심사보류·삭감 증가 — MRI 소견 첨부해서 의뢰, Progress Note에도 관련 내용 차팅 필요, 보통 첫 시술 후 2개월까지만 인정(치료 시작일 기준)",
+    "실비 있는 환자 중 MRI자료 없거나 자보 2개월 이상 신경차단술 종료된 환자는 개인부담 신경차단술 의뢰 검토",
+    "골절 시 반드시 진단주수만큼 입원할 필요는 없음(이의신청으로 연장 가능)",
+    "환자가 자보로 약을 더 원할 때: 청구형태로는 불가 설명, 자보사에 문의 후 되면 사비 구매+자보사 청구 안내(심평원 청구의무 없으므로)",
+    "6개월 이상 장기자보는 약침만 처방",
+    "골절의 경우 탕약이 56포까지 가능",
+    "일반접수 진단서(자동차사고)는 \"본인진술\"로 기재",
+    "자보 진행 중 진단명 추가되면 그날부터 습식부항 다시 시작",
+    "교통사고 소아 처방 기준: 6세 이하는 추나 무조건 삭감(8~9세도 삭감 높음). 한약 포수: 만11세 이상 2×10일분 / 만7~10세 1.5×2×10(하루3회) / 만1~6세 1×2×10(20포) / 만6개월~1세 0.5(10포) / 만6개월 미만 0.4(8포)",
+    "장기자보(일반 2주진단 염좌환자) 분심의 기준: 수상일 1년 이상 시 주1회 치료여도 도인·약침(비급여) 삭감, 2년 이상 시 전체 삭감(골절환자 제외). 심평원은 아직 꾸준 치료 시 장기라도 삭감 안 함. 현재는 단순 염좌환자의 경우 1년 넘기지 말 것.",
+    "소아 입원 기본요건: 부모동반. 10세 이상은 보호자1인 가능, 10세 이하는 보호자2인 이상 필요. 만4세(48개월) 이상 남녀 소아는 원칙적으로 타 성별 보호자와 동실 불가하나, 협의되면 데리고 다녀도 무방",
+    "MRI 촬영 시점은 수상 후 경과기간과 크게 상관없음",
+    "12주 넘은 자보골절 한약: 이의신청하면 인정되거나, 청구 시 EDI메모에 골절 명시하면 인정된다는 사례 있음",
+    "소아자보는 입원 3일째까지만 인정, 이후는 삭감",
+    "자보 요추MRI 맥동파: 현재 맥동파 신청하지 않음. (참고: 이전에는 protrusion 코드 519 대신 512, bulging은 513을 사용해 맥동파 청구에 활용함)",
+    "타병원에서 엠알 1부위 촬영했어도 부위가 겹치지 않으면 2부위 추가 촬영 가능",
+    "책임보험 환자가 120만원 이상 치료 원하면 본인 보험사 \"무보험차 특약\"으로 변경 안내(이후 보험사가 구상권 청구)",
+    "골절 입원기간: 원래 제한 없음, 경상환자만 심사 편의상 예전 2주 기준(현재는 3~5일 기준으로 보는 추세), 필요한 만큼 입원 가능하되 과하면 보험사 태클 가능",
+    "외부에서 XR·MRI 촬영 후 본원 입원한 경우, 본원 XR 없어도 (부위가 다르면) 일주일 뒤 MRI 촬영 가능",
+    "연장진단서에 M코드를 넣기도 함 — 이 경우 4주로 연장진단서 발급 가능",
+    "진단서에 M코드를 넣어도 됨. 다만 이 경우 진단서 끝에 \"추간판 탈출증/척추협착은 기존에 증상이 있었으며 사고 이후 증상 악화된 것으로 사료됩니다.\" 또는 \"사고 이전 무증상성 추간판 탈출증이 있었으며 사고 이후 증상 악화된 것으로 사료됩니다.\"라고 기재함. 발병일을 기재하지 않기도 함",
+    "소아 야제도 2주 진단 가능",
+    "자보신경차단술: 초진일로부터 3주 지난 후 가능, MRI 찍은 환자에 한해 의뢰",
+    "의보든 자보든 MRI상 근육손상 소견이나 골타박 소견이 있으면, 이를 차팅하고 염좌진단 3주까지 가능",
+    "진단서 주수 기준: 목디스크 보통 2주, 허리디스크 3주, 협착증 3~4주, 관절도 2~3주 정도",
+  ],
+  "의보 잡다": [
+    "소화불량은 IR(적외선)도 인정 안 됨",
+    "복잡추나 50% 넘어갈 때 벌징도 삭감(자보·의보 공통)",
+    "실비보험은 상해 진단명을 나중에 넣어서 작성하는 것도 가능(이미 청구했더라도)",
+    "특정 원장님께 주사치료 의뢰 시 \"블럭만\"이라고 명시해야 블럭만 시술함(명시 안 하면 블럭+프롤로 같이 하게 되어 환자가 한방치료를 이탈하는 경우 있음), 블럭만+의보적용 시 본인부담 3~5만원 수준",
+    "골절 진단은 타병원에서 받게 하는 게 좋음 — 원장이 최초 골절 진단자가 되면 유합/불유합 판단과 후유장애진단서·노동력상실률까지 책임져야 하므로 웬만하면 지양",
+    "실비보험 청구 시 차트회사를 통해 세부내역서·영수증이 보험사로 넘어가는 제도가 예정되어 있음 → 청구된 내역은 이후 처방 변경 불가하니 주의",
+    "진단주수 기재는 의무 아님(공란 가능)",
+    "건보 첩약 약제 액수는 약 5.8만원이 마지노선",
+    "상해진단서: 3주 넘어가 형사사건화될 정도면 정형외과로 안내(현재 발급하는 2주 자보 일반진단서도 엄밀히는 상해진단서에 해당). 정형외과 상해진단서는 통상 10만원",
+    "의보입원기간: 척추상병 없으면 1주일, 목 3주, 허리 4주이나 최대 6주까지 가능(단 이 경우 장기입원사유서 작성 필요)",
+  ],
+  "산재": [
+    "침치료와 산재양방물치가 동시 인정이 안됨. 즉 같은날 넣으면 안됨. 산재도수를 위해 산재양방물치 들어가는 날에는 양방물치만 들어가거나 혹은 한방 침치료+단순운동 형태로 들어가야할 것으로 추측.",
+    "본원은 산재 지정병원이 아니며, 해도 S코드에 한함",
+    "한방물치는 인정되나 양방물치는 산재에서 불인정",
+    "산재 MR: 진단 목적 1회 인정, 추가 인정 사유는 (가)장해상태 확인 (나)호전없거나 악화시 진료방향 결정 (다)수술 후 상태 확인",
+    "침술은 2종까지만 인정",
+    "물치실 병행 시 침전기·적외선 제외, 단일상병 입원의 2번 치료에서는 침전기/적외선+표층열/저주파 조합이 인정 안 됨(복잡·다부위 상병이면 인정되기도 함)",
+    "MR을 비급여로 우선 찍고, 골절·종양 등이 나와 의보 적용되면 환불해주는 방식도 사용됨",
+    "산재 승인 시 급여항목 + 한약(외래 30일/입원 60일)까지 통상 인정, 7일치씩 처방 가능. 60일 넘게 입원 시 60일치까지 산재한약 처방 후 이후 통원 시 최대 30일 추가해 최대 90일까지 가능한 사례 있음",
+    "산재환자 추나는 단순추나만 청구 — 복잡추나는 본인부담 80%로 인정 안 됨",
+    "산재 입원 중 산재승인 전 의보처리 기간의 한약처방이 추후 불인정되는 경우 있음 — 약재소견서 작성해서 인정받아야 함",
+    "늑골 다발골절 환자는 1일 이학요법이 한방1회+양방1회 진행 시 인정된 사례가 있으나, 염좌상병으로만 승인된 환자는 동일 치료여도 양방물리치료가 삭감됨",
+    "산재 피부손상환자에게 재생크림 처방 가능(양방에서 처방)",
+    "산재환자 최대 처방일수: 외래 30일 / 입원 60일 (단 산재승인 일수 초과 불가, 퇴원약은 외래로 청구)",
+    "산재 물치: 적외선 빼고 경피경근온열요법만(핫팩+ICT), ICT는 무수가 처리",
+    "산재는 양방 물리치료 처방이 원칙적으로 불인정되어 한방 물리치료로 진행함     - 입원환자: 경피경근온열요법 처방 시 물치실에서 ICT+핫팩 진행. 병동 침치료 시 침전기자극술 대신 물리치료(ICT) 처방으로 대체하되, 병동 침치료 입력 자체에는 침전기자극술을 입력해야 함     - 외래환자: 적외선조사요법 처방 제외 후 경피경근온열요법 처방 시 물리치료 가능",
+    "산재 물치 처방명: 경근저주파요법(한방물리) / 경피경근온열요법",
+    "결과적으로 전침 2회 + 적외선 + 경피경근온열요법(물치실) 조합으로 운영",
+    "산재 퇴원약은 통원 기준(60포까지)",
+    "산재 삭감 사례: 양방 물리치료·양약처방 전부 삭감(단 입원 시 급성기 양약 1~2회는 인정 가능), 습식부항은 시술 첫 1주 매일/1~3주 주4회/3주 이후 주2회 초과분 삭감, 온열요법+적외선 동시처방 시 1개만 인정, 첩약(당귀수산) 처방기간 중 동일성분(오적산) 중복처방 삭감",
+    "산재 첩약은 산재 승인기간 이내로만 처방(초과분 인정 안 됨)",
+    "한약과 양약을 동일 날짜에 처방 시 삭감됨",
+  ],
+  "실비청구": [
+    "약관상 진단외 검사, 한방보신성분, 영양제는 보상 불가",
+    "한방보신성분 목록: 녹용, 인삼, 산삼, 홍삼, 사향, 쌍화탕, 면역단, 수면역단, 공진단(녹용·당귀·산수유·사향), 항암단, 항암플러스, 우황거사단, 우황청심환",
+    "3·4세대 실비: 3대 비급여 합산 350만원 한도(30% 자부담 고려 시 실질 연 500만원까지 가능)",
+  ],
+  "일반 (공통/기타)": [
+    "오더 입력 규칙: 자보는 약침·추나 제외 2회, 의보는 3종침술+척추간 2회(척추간은 U코드 필요), 습부+건부, 적외선 1회",
+    "임신 확인 시 치료 전체 중단",
+    "진단서는 소급 발급이 어려우나 소견서는 소급 가능",
+    "공진단은 냉장보관 후 상온 30분 경과시켜 섭취",
+    "충격파: 2026년 의협 가이드라인 기준 연 12회·부위당 6회 제한, 주 1회(주 2회 가능성 논의 중)",
+    "관리급여 도수치료: 주 상한 2회, 연간 기본 상한 15회, 조건부 연장(수술후 재활·골절 등 의학적 소견 시 9회 연장하여 연 최대 24회), 도수치료 자체는 비급여(건강보험·실손 미적용)",
+    "상해진단서: 3주 이내 경미한 경우에 한해 발급, 비용 10만원, 법적 책임 부담 있어 특별한 경우 아니면 타병원 안내, 본원에 다니던 환자에 한해 발급 검토",
+    "일상생활배상책임보험: 입원기간·치료내용 제한이 원칙적으로 없으나 과도하면 보험사가 문제 제기 가능. 약침은 제한이 적은 편, 한약은 자보 21일/산재(통원 30일·입원 60일) 기준을 준용해서 판단하는 게 안전. 약관상 명시된 건 치료가능기간과 총 가입금액 한도 2가지뿐(나머지 \"몇 회까지\"는 보험사 자체 가이드라인)",
+    "실비 세대별 한방비급여 적용 여부: 2세대 이후 실비는 한방비급여 명시적으로 불가, 1세대 실비는 통원 시 한의원·한방병원 제외 명시(입원은 언급 없어 한방비급여 전부 가능), 배상책임보험은 한방비급여 제외 언급이 없어 가능(자보도 자동차 배상책임보험이라 한약·약침 가능한 이유)",
+    "후유장애진단서 발급 요구 시: 6개월 이상 경과 + 객관적 검사소견(근전도 등)이 필요하므로, 해당 검사가 가능한 병원에서 신경기능 평가 후 진단받도록 안내",
+  ],
+  "개인처방": [
+    "개인처방 시 okocs 상 처방명을 아미스 처방명과 동일하게 기재(예: 개인처방4로 아미스 처방하면 okocs 처방명도 \"개인처방4-쌍화탕가미\" 형태로) — 처방명이 다르면 약이 바뀔 가능성 있음",
+  ],
+  "양방관련": [
+    "치료 스케줄 원칙: 급성통증은 처음 1~2주 주 2회, 이후 주 1회로 경과관찰. 만성통증(3개월 이상)은 치료기간 2~3개월 잡고, 처음 2주 주 2회 → 이후 몇 주 주 1회 → 이후 2주 간격으로 유지하며 경과관찰(환자마다 변동 많음)",
+    "무릎 줄기세포 시술: K-L grade 2~3, 60대 중반 이하 대상, 비급여. 체감효과는 프롤로 10회, PRP 3회 정도. 시술 후 1달간 관절강내 치료·운동 금지. 비용은 한쪽 350만원/양쪽 600만원(타병원은 한쪽 600만원~2000만원까지 다양)",
+    "대체코드로 증식치료 의뢰 시에는 가급적 메모에 남기고 간호부에서 양방에 전달. 26의 경우 첫 1회는 주사+도수, 2회차는 도수만 진행. 15의 경우는 주사+도수로 진행. 별도의 차단술 수가는 없이 진행됨.",
+  ],
+};
+
+
+/* =========================================================
+   2. 상태값
+   ========================================================= */
+const state = {
+  jaboHerb: null,
+  jaboTherapy: "simple",
+  jaboAdmission: "inpatient",
+  jaboManualOpt: null,
+  sanjaeManualOpt: null,
+  mriPart: null,
+  mriSide: "left",
+  muscleTexture: null,
+  cva: { mental:null, plegiaLoc:[], plegiaGrade:null, speech:[], dysphagia:null, dysuria:null, dyspnea:null, etc:"" },
+  fluidPicked: [],
+  painScramblerDx: null,
+  cryoDx: null,
+  cryoContra: [],
+  cryoPostOp: false,
+  shockwaveDx: null,
+  shockwaveContra: [],
+  psPrior:"", psNrsBefore:"", psNrsAfter:"", psSCodeConfirmed:false, psSecondaryDx:null,
+  activeSub: { manualTherapy:"complex", insuranceChart:"general", westernReferral:"jaboManual" }
+};
+
+/* =========================================================
+   3. 공통 유틸
+   ========================================================= */
+function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!==undefined) e.textContent=text; return e; }
+
+function tagBtn(label, active, onClick, extraCls){
+  const b = el('button','tag-btn'+(extraCls?(' '+extraCls):'')+(active?' active':''), label);
+  b.type='button';
+  b.onclick = onClick;
+  return b;
+}
+
+function setOutput(tabId, text){
+  const ta = document.getElementById('out-'+tabId);
+  if(ta) ta.value = text;
+}
+
+function copyText(tabId){
+  const ta = document.getElementById('out-'+tabId);
+  ta.select();
+  try{ navigator.clipboard.writeText(ta.value).then(showToast); } catch(e){ document.execCommand('copy'); showToast(); }
+}
+
+function showToast(){ const t=document.getElementById('toast'); t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
+
+function outputPanel(tabId, titleText){
+  const wrap = el('div','output-panel');
+  wrap.appendChild(el('div','section-title','📋 '+titleText+' 미리보기'));
+  const ta = el('textarea','chart-textarea'); ta.id='out-'+tabId; ta.readOnly=true;
+  wrap.appendChild(ta);
+  const btn = el('button','btn-copy','차팅 텍스트 복사하기');
+  btn.onclick=()=>copyText(tabId);
+  wrap.appendChild(btn);
+  return wrap;
+}
+
+function subTabBar(items, activeId, onSelect){
+  const bar = el('div','subtab-bar');
+  items.forEach(it=>{
+    const b = el('button','subtab-btn'+(activeId===it.id?' active':''), it.label);
+    b.type='button';
+    b.onclick = ()=>onSelect(it.id);
+    bar.appendChild(b);
+  });
+  return bar;
+}
+
+/* 단일 고정 문구를 보여주는 간단 탭(수기요법 서브카테고리에서 재사용) */
+function renderFixedTextBlock(container, tabId, title, text){
+  const grid = el('div','grid-layout');
+  const input = el('div','input-panel');
+  input.appendChild(el('div','section-title','■ '+title));
+  input.appendChild(el('div','desc-line','* 단일 고정 문구입니다. 우측에서 바로 복사하세요.'));
+  grid.appendChild(input);
+  grid.appendChild(outputPanel(tabId, title));
+  container.appendChild(grid);
+  setOutput(tabId, text);
+}
+
+/* =========================================================
+   4. 탭별 렌더 함수
+   ========================================================= */
+const renderers = {};
+
+// 1. 자보 차팅
+renderers.jabo = function(container){
+  container.innerHTML = '';
+  const grid = el('div','grid-layout');
+  const input = el('div','input-panel');
+  input.appendChild(el('div','section-title','■ 입원/외래 선택 (1개 선택)'));
+  const agrp = el('div','tag-group');
+  [["inpatient","입원"],["outpatient","외래(통원)"]].forEach(([id,label])=>{
+    agrp.appendChild(tagBtn(label, state.jaboAdmission===id, ()=>{ state.jaboAdmission=id; renderers.jabo(container); }));
+  });
+  input.appendChild(agrp);
+  input.appendChild(el('div','desc-line','* 입원 선택 시에만 "입원 경과관찰 필요" 문장이 포함됩니다.'));
+  input.appendChild(el('div','section-title','■ 추나 종류 선택 (1개 선택)'));
+  const tgrp = el('div','tag-group');
+  [["simple","단순추나"],["complex","복잡추나"]].forEach(([id,label])=>{
+    tgrp.appendChild(tagBtn(label, state.jaboTherapy===id, ()=>{ state.jaboTherapy=id; renderers.jabo(container); }));
+  });
+  input.appendChild(tgrp);
+  input.appendChild(el('div','section-title','■ 한약&변증 선택 (1개 선택)'));
+  const grp = el('div','tag-group');
+  HERBS.forEach(h=>{
+    const btn = tagBtn(h.tag, state.jaboHerb===h.tag, ()=>{ state.jaboHerb = h.tag; renderers.jabo(container); });
+    grp.appendChild(btn);
+  });
+  input.appendChild(grp);
+  input.appendChild(el('div','desc-line','* 위 9개 처방 중 하나를 선택하면 한약&변증 줄과 하단 요약 문장의 처방명이 자동 반영됩니다.'));
+
+  input.appendChild(el('div','section-title','■ 자보첩약의사소견 (클릭 시 바로 복사)'));
+  const opinionGrp = el('div','tag-group');
+  const opinionText = "통증치료 위해 상기 변증으로 판단 후 상기 한약 처방 필요성 설명하고 환자 동의 후 처방함.";
+  const opinionBtn = tagBtn('자보첩약의사소견 복사하기', false, ()=>{
+    try{ navigator.clipboard.writeText(opinionText).then(showToast); } catch(e){ showToast(); }
+  }, 'big');
+  opinionBtn.style.background = '#fdecea';
+  opinionBtn.style.borderColor = '#c0392b';
+  opinionBtn.style.color = '#c0392b';
+  opinionGrp.appendChild(opinionBtn);
+  input.appendChild(opinionGrp);
+
+  input.appendChild(el('div','section-title','■ 기타 정보'));
+  const addRefBox = el('div','note-box');
+  addRefBox.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:12.5px;line-height:1.6;">
+<tr><td><b>활혈탕</b> 혈어증 <b>102</b></td><td><b>건근탕</b> 풍한증 <b>002</b></td><td><b>활근탕</b> 습담증 <b>157</b></td></tr>
+<tr><td style="text-align:right;"><span onclick="try{navigator.clipboard.writeText('대조').then(showToast)}catch(e){}" style="cursor:pointer;display:inline-block;background:#0f4c81;color:#fff;font-weight:700;padding:2px 10px;border-radius:12px;">+ 대조 3g</span></td><td style="text-align:right;"><span onclick="try{navigator.clipboard.writeText('구척').then(showToast)}catch(e){}" style="cursor:pointer;display:inline-block;background:#0f4c81;color:#fff;font-weight:700;padding:2px 10px;border-radius:12px;">+ 구척 1.8g</span></td><td style="text-align:right;"><span onclick="try{navigator.clipboard.writeText('천궁').then(showToast)}catch(e){}" style="cursor:pointer;display:inline-block;background:#0f4c81;color:#fff;font-weight:700;padding:2px 10px;border-radius:12px;">+ 천궁 1.4g</span></td></tr>
+<tr><td colspan="3" style="height:8px;"></td></tr>
+<tr><td><b>정척탕</b> 한습증 <b>005</b></td><td><b>안신평위탕</b> 기체증 <b>094</b></td><td><b>갈근탕</b> 습열증 <b>006</b></td></tr>
+<tr><td><b>사백산</b> 풍열증 <b>003</b></td><td><b>평안탕</b> 심양허증 <b>138</b></td><td><b>제통탕</b> 풍습증 <b>004</b></td></tr>
+</table>`;
+  input.appendChild(addRefBox);
+  grid.appendChild(input);
+  grid.appendChild(outputPanel('jabo','자보 차팅'));
+  container.appendChild(grid);
+  const herb = HERBS.find(h=>h.tag===state.jaboHerb);
+  const therapyBlock = state.jaboTherapy === 'complex' ? JABO_COMPLEX_BLOCK : JABO_SIMPLE_BLOCK;
+  setOutput('jabo', JABO_TEMPLATE(therapyBlock, state.jaboAdmission, herb?herb.line:'', herb?herb.tag:''));
+};
+
+// 2. 수기요법 (서브: 복잡추나/단순추나/도인운동/근건이완)
+renderers.manualTherapy = function(container){
+  const subItems = [
+    {id:"complex", label:"복잡추나"},
+    {id:"simple", label:"단순추나"},
+    {id:"doin", label:"도인운동요법"},
+    {id:"myotendon", label:"근건이완수기요법"},
+  ];
+  container.appendChild(subTabBar(subItems, state.activeSub.manualTherapy, (id)=>{
+    state.activeSub.manualTherapy = id;
+    container.innerHTML = '';
+    renderers.manualTherapy(container);
+  }));
+  const map = {
+    complex: [ 'manualTherapy_complex', '복잡추나', COMPLEX_TEXT ],
+    simple: [ 'manualTherapy_simple', '단순추나', SIMPLE_TEXT ],
+    doin: [ 'manualTherapy_doin', '도인운동요법', DOIN_TEXT ],
+    myotendon: [ 'manualTherapy_myotendon', '근건이완수기요법', MYOTENDON_TEXT ],
+  };
+  const [tabId, title, text] = map[state.activeSub.manualTherapy];
+  renderFixedTextBlock(container, tabId, title, text);
+};
+
+// 3. MRI 검사의뢰양식
+renderers.mriRequest = function(container){
+  container.innerHTML = '';
+  const grid = el('div','grid-layout');
+  const input = el('div','input-panel');
+  input.appendChild(el('div','section-title','■ 부위 선택 (1개)'));
+  const grp = el('div','tag-group');
+  Object.keys(EXAM_PARTS).forEach(p=>{
+    grp.appendChild(tagBtn(p, state.mriPart===p, ()=>{ state.mriPart=p; renderers.mriRequest(container); }));
+  });
+  input.appendChild(grp);
+  input.appendChild(el('div','section-title','■ 좌/우/양측 선택 (1개)'));
+  const sgrp = el('div','tag-group');
+  [["left","좌측"],["right","우측"],["both","양측"]].forEach(([id,label])=>{
+    sgrp.appendChild(tagBtn(label, state.mriSide===id, ()=>{ state.mriSide=id; renderers.mriRequest(container); }));
+  });
+  input.appendChild(sgrp);
+  input.appendChild(el('div','desc-line','* 등록된 원자료는 좌측 기준이며, 우측/양측 선택 시 수치와 좌·우 표현이 자동으로 바뀝니다. 예외적인 소견은 복사 후 직접 확인해주세요.'));
+  grid.appendChild(input);
+  grid.appendChild(outputPanel('mriRequest','MRI 검사의뢰양식'));
+  container.appendChild(grid);
+  setOutput('mriRequest', state.mriPart ? examTextForSide(EXAM_PARTS[state.mriPart], state.mriSide) : '(좌측에서 부위를 선택해주세요)');
+};
+
+// 4. 경근무늬검사
+renderers.muscleTexture = function(container){
+  container.innerHTML = '';
+  const grid = el('div','grid-layout');
+  const input = el('div','input-panel');
+  input.appendChild(el('div','section-title','■ 부위 선택 (1개)'));
+  const grp = el('div','tag-group');
+  Object.keys(MUSCLE_TEXTURE).forEach(p=>{
+    grp.appendChild(tagBtn(p, state.muscleTexture===p, ()=>{ state.muscleTexture=p; renderers.muscleTexture(container); }));
+  });
+  input.appendChild(grp);
+  grid.appendChild(input);
+  grid.appendChild(outputPanel('muscleTexture','경근무늬검사 시행사유'));
+  container.appendChild(grid);
+  setOutput('muscleTexture', state.muscleTexture ? MUSCLE_TEXTURE[state.muscleTexture] : '(좌측에서 부위를 선택해주세요)');
+};
+
+// 5. 의보차팅 (서브: 일반/디스크·협착증/CVA)
+const COMMOTIO_TEXT = `1. 사고당시 정신 상태의 변화 / 30분 미만 의식소실X / 24시간 미만 외상후 기억상실X / 국소신경학적 이상X
+2. GCS scale : 15 point
+3. 기타 동반 증상 : 오심 두통 현훈`;
+
+renderers.insuranceChart = function(container){
+  const subItems = [
+    {id:"general", label:"의보 일반차팅"},
+    {id:"discStenosis", label:"디스크·협착증"},
+    {id:"cva", label:"CVA 환자차팅"},
+    {id:"commotio", label:"뇌진탕 체크"},
+  ];
+  container.appendChild(subTabBar(subItems, state.activeSub.insuranceChart, (id)=>{
+    state.activeSub.insuranceChart = id;
+    container.innerHTML = '';
+    renderers.insuranceChart(container);
+  }));
+  if(state.activeSub.insuranceChart === 'general'){
+    renderFixedTextBlock(container, 'insuranceChart_general', '의보 일반 차팅내용', INSURANCE_GENERAL_TEXT);
+    return;
+  }
+  if(state.activeSub.insuranceChart === 'discStenosis'){
+    renderFixedTextBlock(container, 'insuranceChart_disc', '디스크/협착증 차팅내용', DISC_STENOSIS_TEXT);
+    return;
+  }
+  if(state.activeSub.insuranceChart === 'commotio'){
+    renderFixedTextBlock(container, 'insuranceChart_commotio', 'Commotio cerebri(뇌진탕) check', COMMOTIO_TEXT);
+    return;
+  }
+  renderCvaBlock(container);
+};
+
+function renderCvaBlock(container){
+  const grid = el('div','grid-layout');
+  const input = el('div','input-panel');
+  const c = state.cva;
+
+  input.appendChild(el('div','section-title','■ 1. Mental Gr. (1개 선택)'));
+  const mentalOpts = ['I. Alert, confusion','II. Drowsy, Stupor','III. Semicoma','IV. Coma'];
+  const g1 = el('div','tag-group');
+  mentalOpts.forEach(o=>g1.appendChild(tagBtn(o, c.mental===o, ()=>{ c.mental=o; container.innerHTML=''; renderers.insuranceChart(container); })));
+  input.appendChild(g1);
+
+  input.appendChild(el('div','section-title','■ 2. plegia 부위 (다중 선택) + 등급 (1개 선택)'));
+  const locs = ['Rt. UE','Lt. UE','Rt. LE','Lt. LE'];
+  const g2 = el('div','tag-group');
+  locs.forEach(o=>{
+    const active = c.plegiaLoc.includes(o);
+    g2.appendChild(tagBtn(o, active, ()=>{
+      if(active) c.plegiaLoc = c.plegiaLoc.filter(x=>x!==o); else c.plegiaLoc.push(o);
+      container.innerHTML=''; renderers.insuranceChart(container);
+    }));
+  });
+  input.appendChild(g2);
+  const grades = ['weakness 소력 (Gr.4)','paresis 부전마비 (Gr.3)','paresis 부전마비 (Gr.2)','plegia 마비 (Gr.1)','plegia 마비 (Gr.0)'];
+  const g2b = el('div','tag-group');
+  grades.forEach(o=>g2b.appendChild(tagBtn(o, c.plegiaGrade===o, ()=>{ c.plegiaGrade=o; container.innerHTML=''; renderers.insuranceChart(container); })));
+  input.appendChild(g2b);
+
+  input.appendChild(el('div','section-title','■ 3. Dysarthria / Aphasia (다중 선택)'));
+  const speechOpts = ['Dysarthria(어삽)','Aphasia(실어증)'];
+  const g3 = el('div','tag-group');
+  speechOpts.forEach(o=>{
+    const active = c.speech.includes(o);
+    g3.appendChild(tagBtn(o, active, ()=>{
+      if(active) c.speech = c.speech.filter(x=>x!==o); else c.speech.push(o);
+      container.innerHTML=''; renderers.insuranceChart(container);
+    }));
+  });
+  input.appendChild(g3);
+
+  input.appendChild(el('div','section-title','■ 4~6. Dysphagia / Dysuria / Dyspnea'));
+  const g4 = el('div','tag-group');
+  ['L/T keep 상태','해당없음(정상연하)'].forEach(o=>g4.appendChild(tagBtn(o, c.dysphagia===o, ()=>{ c.dysphagia=o; container.innerHTML=''; renderers.insuranceChart(container); })));
+  input.appendChild(el('div','desc-line','4. Dysphagia'));
+  input.appendChild(g4);
+  const g5 = el('div','tag-group');
+  ['F/C keep 상태','해당없음'].forEach(o=>g5.appendChild(tagBtn(o, c.dysuria===o, ()=>{ c.dysuria=o; container.innerHTML=''; renderers.insuranceChart(container); })));
+  input.appendChild(el('div','desc-line','5. Dysuria'));
+  input.appendChild(g5);
+  const g6 = el('div','tag-group');
+  ['T/C keep 상태','해당없음'].forEach(o=>g6.appendChild(tagBtn(o, c.dyspnea===o, ()=>{ c.dyspnea=o; container.innerHTML=''; renderers.insuranceChart(container); })));
+  input.appendChild(el('div','desc-line','6. Dyspnea'));
+  input.appendChild(g6);
+
+  input.appendChild(el('div','section-title','■ 7. 기타 호소 증상 (직접입력)'));
+  const etcInput = el('input','text-input'); etcInput.type='text'; etcInput.value=c.etc; etcInput.placeholder='기타 호소 증상을 입력하세요';
+  etcInput.oninput = (e)=>{ c.etc = e.target.value; setOutput('cva', buildCvaText()); };
+  input.appendChild(etcInput);
+
+  grid.appendChild(input);
+  grid.appendChild(outputPanel('cva','CVA 환자 차팅'));
+  container.appendChild(grid);
+  setOutput('cva', buildCvaText());
+
+  function plegiaLabel(locArr){
+    if(!locArr.length) return '(부위 선택)';
+    const has = (x)=>locArr.includes(x);
+    if(has('Rt. UE') && has('Rt. LE') && has('Lt. UE') && has('Lt. LE')) return 'Quadriplegia (Rt./Lt. UE/LE)';
+    if(has('Rt. UE') && has('Rt. LE') && !has('Lt. UE') && !has('Lt. LE')) return 'Rt. hemiplegia';
+    if(has('Lt. UE') && has('Lt. LE') && !has('Rt. UE') && !has('Rt. LE')) return 'Lt. hemiplegia';
+    if(has('Rt. LE') && has('Lt. LE') && !has('Rt. UE') && !has('Lt. UE')) return 'Paraplegia (B/L LE)';
+    if(locArr.length === 1) return locArr[0] + ' monoplegia';
+    return locArr.join(', ') + ' plegia';
+  }
+  function buildCvaText(){
+    const plegiaLocText = plegiaLabel(c.plegiaLoc);
+    const plegiaGradeText = c.plegiaGrade || '(등급 선택)';
+    const speechText = c.speech.length ? c.speech.join(' / ') : '(선택)';
+    return `1. Mental Gr. ${c.mental || '(선택)'}
+2. ${plegiaLocText} (${plegiaGradeText})
+3. ${speechText}
+4. Dysphagia (${c.dysphagia || '(선택)'})
+5. Dysuria (${c.dysuria || '(선택)'})
+6. Dyspnea (${c.dyspnea || '(선택)'})
+7. 기타 호소 증상: ${c.etc || '(입력)'}`;
+  }
+}
+
+// 6. 수액설명 (선택/복사 없이 원자료만 제시)
+renderers.fluid = function(container){
+  const wrap = el('div','input-panel');
+  wrap.appendChild(el('div','section-title','■ 수액 설명'));
+  Object.keys(FLUID_DESC).forEach(name=>{
+    const box = el('div','note-box');
+    box.style.whiteSpace = 'pre-wrap';
+    box.textContent = FLUID_DESC[name];
+    wrap.appendChild(box);
+  });
+  wrap.appendChild(el('div','section-title','■ 처방/가격 표'));
+  const table = el('table','ref-table');
+  const thead = el('tr'); ['처방명','구성','가격'].forEach(h=>thead.appendChild(el('th',null,h)));
+  table.appendChild(thead);
+  FLUID_TABLE.forEach(r=>{
+    const tr = el('tr');
+    r.forEach(c=>tr.appendChild(el('td',null,c)));
+    table.appendChild(tr);
+  });
+  wrap.appendChild(table);
+  container.appendChild(wrap);
+};
+
+// 7. 양방의뢰 (서브: 자보도수/산재도수/페인스크램블러/크라이오냉각)
+renderers.westernReferral = function(container){
+  const subItems = [
+    {id:"jaboManual", label:"자보도수의뢰"},
+    {id:"sanjaeManual", label:"산재도수의뢰"},
+    {id:"painScrambler", label:"페인스크램블러"},
+    {id:"cryo", label:"크라이오/냉각"},
+    {id:"shockwave", label:"충격파 차팅"},
+  ];
+  container.appendChild(subTabBar(subItems, state.activeSub.westernReferral, (id)=>{
+    state.activeSub.westernReferral = id;
+    container.innerHTML = '';
+    renderers.westernReferral(container);
+  }));
+  const sub = state.activeSub.westernReferral;
+  if(sub === 'jaboManual') return renderManualReferral(container, 'jaboManual', '자보도수의뢰양식', state.jaboManualOpt, (v)=>{state.jaboManualOpt=v;}, jaboManualTemplate);
+  if(sub === 'sanjaeManual') return renderManualReferral(container, 'sanjaeManual', '산재도수의뢰양식', state.sanjaeManualOpt, (v)=>{state.sanjaeManualOpt=v;}, sanjaeManualTemplate,
+    '침치료와 산재양방물치가 같은날 들어갈 수 없음.<br><b>양방물치+단순운동치료</b> 혹은 <b>침치료+단순운동치료</b>로 시행.<br>(2주 4회 조건 충족 때까지)<br>산재환자 추나시 <b>단순추나만 청구</b> — 본인부담 80% 복잡추나는 인정 안됨.');
+  if(sub === 'painScrambler') return renderPainScrambler(container);
+  if(sub === 'cryo') return renderCryo(container);
+  if(sub === 'shockwave') return renderShockwavePlaceholder(container);
+};
+
+function renderShockwavePlaceholder(container){
+  const grid = el('div','grid-layout');
+  const input = el('div','input-panel');
+  input.appendChild(el('div','section-title','■ 부위·진단명 선택 (1개)'));
+  const table = el('table','ref-table');
+  const thead = el('tr'); ['부위','진단명','KCD 코드'].forEach(h=>thead.appendChild(el('th',null,h)));
+  table.appendChild(thead);
+  SHOCKWAVE_DX.forEach(r=>{
+    const tr = el('tr');
+    tr.style.cursor='pointer';
+    if(state.shockwaveDx && state.shockwaveDx[0]===r[0] && state.shockwaveDx[1]===r[1]) tr.style.background='var(--primary-light)';
+    tr.onclick = ()=>{ state.shockwaveDx = r; container.innerHTML=''; renderers.westernReferral(container); };
+    r.forEach(c=>tr.appendChild(el('td',null,c)));
+    table.appendChild(tr);
+  });
+  input.appendChild(table);
+  input.appendChild(el('div','desc-line','* 표의 행을 클릭하면 우측 문구의 진단명·코드가 반영됩니다.'));
+
+  input.appendChild(el('div','section-title','■ 금기증 배제 확인 (다중 선택)'));
+  const grp = el('div','tag-group');
+  SHOCKWAVE_CONTRA.forEach(o=>{
+    const active = state.shockwaveContra.includes(o);
+    grp.appendChild(tagBtn(o, active, ()=>{
+      if(active) state.shockwaveContra = state.shockwaveContra.filter(x=>x!==o); else state.shockwaveContra.push(o);
+      container.innerHTML=''; renderers.westernReferral(container);
+    }));
+  });
+  input.appendChild(grp);
+
+  const freqNote = el('div','note-box');
+  freqNote.innerHTML = '<b>시행 기준 (참고)</b><br>· 부위당 최대 6회, 연 최대 12회<br>· 주 1회 시행 원칙<br>· 동일 회차 내 다부위 치료 불인정<br>· 1회 최소 2,000타 이상 권장';
+  input.appendChild(freqNote);
+
+  grid.appendChild(input);
+  grid.appendChild(outputPanel('shockwave','충격파 차팅'));
+  container.appendChild(grid);
+
+  const dx = state.shockwaveDx;
+  const dxText = dx ? `${dx[1]} (${dx[2]})` : '(표에서 진단명 선택)';
+  const contraText = state.shockwaveContra.length ? state.shockwaveContra.join(', ')+' 없음을 확인함' : '(배제 항목 선택 필요)';
+  const text = `본 환자 ${dxText}으로 판단됨. 단순물리치료만으로는 개선이 어렵다고 판단되어 통증치료 및 조직 회복을 위해 체외충격파 의뢰함.
+◇ 금기증 배제 확인 : ${contraText}`;
+  setOutput('shockwave', text);
+}
+
+function renderManualReferral(container, tabId, title, currentOpt, setOpt, templateFn, extraNoteHtml){
+  const grid = el('div','grid-layout');
+  const input = el('div','input-panel');
+  input.appendChild(el('div','section-title','■ '+title));
+  input.appendChild(el('div','desc-line','* 카테고리를 선택했습니다. 아래에서 기능제한 상황을 선택하세요.'));
+  input.appendChild(el('div','section-title','■ 기능제한 상황 선택 (1개)'));
+  const grp = el('div','tag-group');
+  MANUAL_OPTIONS.forEach(o=>{
+    grp.appendChild(tagBtn(o, currentOpt===o, ()=>{
+      setOpt(o);
+      container.innerHTML = '';
+      renderers.westernReferral(container);
+    }));
+  });
+  input.appendChild(grp);
+  if(extraNoteHtml){
+    const note = el('div','note-box');
+    note.innerHTML = extraNoteHtml;
+    input.appendChild(note);
+  }
+  const workflowNote = el('div','info-box');
+  workflowNote.innerHTML = 'ℹ️ 위 문구를 대괄호 안 내용까지 채워 복사해서 의뢰하면, 도수치료실에서 뒤쪽에 <b>\'VAS 15% 호전. // ROM 굴곡 15% 호전. 신전 10% 호전. 측굴 10% 호전. 회전 10% 호전.\'</b> 문구를 추가해서 차트를 완성합니다. (이 안내문은 참고용이며 실제 복사되는 차팅 텍스트에는 포함되지 않습니다.)';
+  input.appendChild(workflowNote);
+  grid.appendChild(input);
+  grid.appendChild(outputPanel(tabId, title));
+  container.appendChild(grid);
+  setOutput(tabId, templateFn(currentOpt));
+}
+
+function renderPainScrambler(container){
+  const grid = el('div','grid-layout');
+  const input = el('div','input-panel');
+  input.appendChild(el('div','section-title','■ 상병군별 진단명 · KCD 코드 (참고, 1개 선택)'));
+  const table = el('table','ref-table');
+  const thead = el('tr'); ['상병명(한글)','KCD 코드'].forEach(h=>thead.appendChild(el('th',null,h)));
+  table.appendChild(thead);
+  PAIN_SCRAMBLER_DX.forEach(r=>{
+    const tr = el('tr');
+    tr.style.cursor='pointer';
+    if(state.painScramblerDx && state.painScramblerDx[0]===r[0]) tr.style.background='var(--primary-light)';
+    tr.onclick = ()=>{ state.painScramblerDx = r; container.innerHTML=''; renderers.westernReferral(container); };
+    r.forEach(c=>tr.appendChild(el('td',null,c)));
+    table.appendChild(tr);
+  });
+  input.appendChild(table);
+  input.appendChild(el('div','desc-line','* 표의 행을 클릭하면 우측 예시 차팅 문구의 상병명·코드가 반영됩니다.'));
+
+  const note = el('div','note-box');
+  note.innerHTML = '<b>차팅 시 주의사항</b><br>· S코드(염좌·타박상 등 급성 손상) 주상병 절대 금지 — 비급여 인정 기준(만성·난치성)과 불일치<br>· 초진 시 발병일을 "○개월 전"으로 명시해 3개월 이상 경과(만성) 입증<br>· 선행 치료(약물·물리치료·침/약침 등) 실패 이력을 구체적으로 기록 ("~치료 시행하였으나 VAS ○ 지속" 형식)<br>· NRS/VAS 점수를 치료 전·중·후 정기 기록<br>· 주상병(M/G코드) + 부상병 R52.1(만성 난치성) 또는 R52.2(기타 만성) 병기 권장';
+  input.appendChild(note);
+
+  input.appendChild(el('div','section-title','■ S코드(급성 손상) 아님 확인'));
+  const sGrp = el('div','tag-group');
+  sGrp.appendChild(tagBtn('S코드 아님을 확인함', state.psSCodeConfirmed, ()=>{ state.psSCodeConfirmed = !state.psSCodeConfirmed; setOutput('painScrambler', buildPsText()); }, 'accent'));
+  input.appendChild(sGrp);
+
+  input.appendChild(el('div','section-title','■ 부상병 선택 (1개)'));
+  const rGrp = el('div','tag-group');
+  [["R52.1","R52.1 (만성 난치성 동통)"],["R52.2","R52.2 (기타 만성 동통)"]].forEach(([id,label])=>{
+    rGrp.appendChild(tagBtn(label, state.psSecondaryDx===id, ()=>{ state.psSecondaryDx=id; setOutput('painScrambler', buildPsText()); }));
+  });
+  input.appendChild(rGrp);
+
+  input.appendChild(el('div','section-title','■ 예시 차팅 문구 입력값'));
+  const priorInput = el('input','text-input'); priorInput.type='text'; priorInput.placeholder='선행치료 내역 (예: 약물치료 및 물리치료)'; priorInput.value=state.psPrior;
+  priorInput.oninput=(e)=>{ state.psPrior=e.target.value; setOutput('painScrambler', buildPsText()); };
+  input.appendChild(priorInput);
+  const row2 = el('div','inline-row');
+  const nrsBefore = el('input','text-input'); nrsBefore.type='text'; nrsBefore.placeholder='치료 전 NRS'; nrsBefore.value=state.psNrsBefore;
+  nrsBefore.oninput=(e)=>{ state.psNrsBefore=e.target.value; setOutput('painScrambler', buildPsText()); };
+  const nrsAfter = el('input','text-input'); nrsAfter.type='text'; nrsAfter.placeholder='현재 NRS'; nrsAfter.value=state.psNrsAfter;
+  nrsAfter.oninput=(e)=>{ state.psNrsAfter=e.target.value; setOutput('painScrambler', buildPsText()); };
+  row2.appendChild(nrsBefore); row2.appendChild(nrsAfter);
+  input.appendChild(row2);
+
+  grid.appendChild(input);
+  grid.appendChild(outputPanel('painScrambler','페인스크램블러'));
+  container.appendChild(grid);
+  setOutput('painScrambler', buildPsText());
+
+  function buildPsText(){
+    const dx = state.painScramblerDx;
+    const mainCode = dx ? (dx[2] || dx[1]) : null;
+    const secondaryText = state.psSecondaryDx === 'R52.1' ? 'R52.1 (만성 난치성 동통)' : state.psSecondaryDx === 'R52.2' ? 'R52.2 (기타 만성 동통)' : '(R52.1/R52.2 중 선택)';
+    return `◇ 주상병 : ${dx ? dx[0]+' ('+mainCode+')' : '(표에서 진단명 선택)'}
+◇ 부상병 : ${secondaryText}
+◇ 발병일 : 3개월 이상 경과된 만성 통증 상태${state.psSCodeConfirmed ? '\n◇ S코드(급성 손상) 아님을 확인함' : ''}
+◇ 선행치료 이력 : ${state.psPrior||'(선행치료 내역 입력)'} 시행하였으나 통증 지속 (NRS ${state.psNrsBefore||'○'} → 현재 NRS ${state.psNrsAfter||'○'})
+◇ 상기와 같이 만성·난치성 통증 소견 확인되어 페인스크램블러 치료 시행함.`;
+  }
+}
+
+function renderCryo(container){
+  const grid = el('div','grid-layout');
+  const input = el('div','input-panel');
+  input.appendChild(el('div','section-title','■ 상병군별 진단명 · KCD 코드 (참고, 1개 선택)'));
+  const table = el('table','ref-table');
+  const thead = el('tr'); ['상병명(한글)','KCD 코드'].forEach(h=>thead.appendChild(el('th',null,h)));
+  table.appendChild(thead);
+  CRYO_DX.forEach(r=>{
+    const tr = el('tr');
+    tr.style.cursor='pointer';
+    if(state.cryoDx && state.cryoDx[0]===r[0]) tr.style.background='var(--primary-light)';
+    tr.onclick = ()=>{ state.cryoDx = r; container.innerHTML=''; renderers.westernReferral(container); };
+    r.forEach(c=>tr.appendChild(el('td',null,c)));
+    table.appendChild(tr);
+  });
+  input.appendChild(table);
+  input.appendChild(el('div','desc-line','* 표의 행을 클릭하면 우측 예시 차팅 문구의 상병명·코드가 반영됩니다.'));
+
+  const note = el('div','note-box');
+  note.innerHTML = '<b>차팅 시 주의사항</b><br>· 페인스크램블러와 달리 급성 손상(S코드)도 적응증에 포함 — 급·만성 구분 부담이 상대적으로 적음<br>· 단, 금기증 배제 여부를 반드시 기록: 레이노증후군, 한랭두드러기, 심한 말초혈액순환장애(당뇨병성 등), 감각저하 부위(동상 위험)<br>· 수술 후 처치 목적 시 원인이 된 기존 M/S 상병을 그대로 주상병 유지';
+  input.appendChild(note);
+
+  input.appendChild(el('div','section-title','■ 금기증 배제 확인 (다중 선택)'));
+  const contraList = ['레이노증후군','한랭두드러기','심한 말초혈액순환장애','감각저하 부위(동상 위험)'];
+  const grp = el('div','tag-group');
+  contraList.forEach(o=>{
+    const active = state.cryoContra.includes(o);
+    grp.appendChild(tagBtn(o, active, ()=>{
+      if(active) state.cryoContra = state.cryoContra.filter(x=>x!==o); else state.cryoContra.push(o);
+      container.innerHTML=''; renderers.westernReferral(container);
+    }));
+  });
+  input.appendChild(grp);
+
+  input.appendChild(el('div','section-title','■ 수술 후 처치 여부'));
+  const postGrp = el('div','tag-group');
+  postGrp.appendChild(tagBtn('수술 후 처치 목적 (기존 상병 유지)', !!state.cryoPostOp, ()=>{ state.cryoPostOp = !state.cryoPostOp; container.innerHTML=''; renderers.westernReferral(container); }, 'accent'));
+  input.appendChild(postGrp);
+
+  grid.appendChild(input);
+  grid.appendChild(outputPanel('cryo','크라이오/냉각치료기'));
+  container.appendChild(grid);
+
+  const dx = state.cryoDx;
+  const contraText = state.cryoContra.length ? state.cryoContra.join(', ')+' 없음을 확인함' : '(배제 항목 선택 필요)';
+  const text = `통증으로 인한 기능제한이 지속되고 있고, 단순 물리치료만으로는 개선이 어렵다고 판단되어 크라이오를 다음과 같은 기준에 따라 의뢰함
+◇ 주상병 : ${dx ? dx[0]+' ('+dx[1]+')' : '(표에서 진단명 선택)'}
+◇ 금기증 배제 확인 : ${contraText}${state.cryoPostOp ? '\n◇ 수술 후 처치 목적으로 기존 상병을 그대로 주상병 유지함' : ''}`;
+  setOutput('cryo', text);
+}
+
+/* =========================================================
+   5. 탭 초기화 / 전환
+   ========================================================= */
+// 8. 유의사항 (탭별 차팅과 무관한 행정/정책 참고자료)
+state.activeRefCategory = state.activeRefCategory || Object.keys(REFERENCE_NOTES)[0];
+state.refSearchQuery = state.refSearchQuery || '';
+renderers.referenceNotes = function(container){
+  container.innerHTML = '';
+  const wrap = el('div','input-panel');
+  wrap.appendChild(el('div','section-title','■ 유의사항 — 차팅과 무관한 행정/정책 참고 메모'));
+  wrap.appendChild(el('div','desc-line','* 실제 차팅 문구가 아닌, 진료·청구 시 참고할 잡다한 유의사항 모음입니다.'));
+
+  const searchInput = el('input','text-input');
+  searchInput.type = 'text';
+  searchInput.placeholder = '유의사항 전체에서 검색 (예: 도수, 산재, 소아 ...)';
+  searchInput.value = state.refSearchQuery;
+  searchInput.onkeydown = (e)=>{ if(e.key === 'Enter'){ state.refSearchQuery = e.target.value; renderers.referenceNotes(container); } };
+  wrap.appendChild(searchInput);
+  const searchBtn = el('button','btn-copy','검색');
+  searchBtn.style.marginBottom = '14px';
+  searchBtn.onclick = ()=>{ state.refSearchQuery = searchInput.value; renderers.referenceNotes(container); };
+  wrap.appendChild(searchBtn);
+
+  const query = state.refSearchQuery.trim();
+
+  if(query){
+    let totalHits = 0;
+    Object.keys(REFERENCE_NOTES).forEach(cat=>{
+      const hits = REFERENCE_NOTES[cat].filter(item=> item.toLowerCase().includes(query.toLowerCase()));
+      if(hits.length === 0) return;
+      totalHits += hits.length;
+      wrap.appendChild(el('div','section-title','▸ '+cat+' ('+hits.length+'건)'));
+      const list = el('ol');
+      list.style.cssText = 'padding-left:20px;line-height:1.8;font-size:13px;margin-bottom:14px;';
+      hits.forEach(item=>{ list.appendChild(el('li', null, item)); });
+      wrap.appendChild(list);
+    });
+    if(totalHits === 0){
+      wrap.appendChild(el('div','desc-line','검색 결과가 없습니다.'));
+    }
+    container.appendChild(wrap);
+    return;
+  }
+
+  const subBar = el('div','subtab-bar');
+  Object.keys(REFERENCE_NOTES).forEach(cat=>{
+    const b = el('button','subtab-btn'+(state.activeRefCategory===cat?' active':''), cat);
+    b.type='button';
+    b.onclick = ()=>{ state.activeRefCategory = cat; renderers.referenceNotes(container); };
+    subBar.appendChild(b);
+  });
+  wrap.appendChild(subBar);
+  const list = el('ol');
+  list.style.cssText = 'padding-left:20px;line-height:1.8;font-size:13px;';
+  REFERENCE_NOTES[state.activeRefCategory].forEach(item=>{
+    const li = el('li', null, item);
+    list.appendChild(li);
+  });
+  wrap.appendChild(list);
+  container.appendChild(wrap);
+};
+
+function switchTab(tabId){
+  document.querySelectorAll('#tabBar .tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tabbtn-'+tabId).classList.add('active');
+  const main = document.getElementById('mainContent');
+  main.innerHTML = '';
+  const wrap = el('div','tab-content active');
+  wrap.id = 'tab-'+tabId;
+  main.appendChild(wrap);
+  renderers[tabId](wrap);
+}
+
+function init(){
+  const bar = document.getElementById('tabBar');
+  TABS.forEach((t,i)=>{
+    const b = el('button','tab-btn'+(i===0?' active':''), t.label);
+    b.id = 'tabbtn-'+t.id;
+    b.onclick = ()=>switchTab(t.id);
+    bar.appendChild(b);
+  });
+  switchTab(TABS[0].id);
+}
+init();
+</script>
+</body>
+</html>
