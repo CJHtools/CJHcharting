@@ -66,6 +66,7 @@ header p { font-size: 13px; opacity: 0.9; }
 <header>
 <h1>차팅 보조 태그 체크리스트</h1>
 <p>클릭 한 번으로 차팅 문구를 완성하고 복사하는 도구</p>
+<button id="offlineSaveBtn" style="margin-top:10px;background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.4);padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;">📥 오프라인 저장 (인터넷 안 될 때 대비, 파일로 저장해두기)</button>
 </header>
 <div class="tab-container" id="tabBar"></div>
 <div class="main-content" id="mainContent"></div>
@@ -1199,6 +1200,32 @@ function init(){
   });
   switchTab(TABS[0].id);
 }
+async function saveOfflineCopy(){
+  const btn = document.getElementById('offlineSaveBtn');
+  const original = btn.textContent;
+  try{
+    const cacheBustUrl = location.pathname + (location.search ? location.search+'&' : '?') + '_t=' + Date.now();
+    const res = await fetch(cacheBustUrl, { cache: 'no-store' });
+    if(!res.ok) throw new Error('fetch failed');
+    const text = await res.text();
+    const blob = new Blob([text], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'tag_charting_tool_offline.html';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    btn.textContent = '✅ 저장 완료! (다운로드 폴더 확인 — 이 파일은 인터넷 없이도 단독 실행됩니다)';
+    setTimeout(()=>{ btn.textContent = original; }, 4000);
+  } catch(e){
+    btn.textContent = '⚠ 저장 실패 — 인터넷 연결을 확인해주세요';
+    setTimeout(()=>{ btn.textContent = original; }, 3000);
+  }
+}
+document.getElementById('offlineSaveBtn').onclick = saveOfflineCopy;
+
 init();
 </script>
 </body>
