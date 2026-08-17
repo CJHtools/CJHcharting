@@ -721,8 +721,6 @@ renderers.jabo = function(container){
   const addRefBox = el('div','note-box');
   addRefBox.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:12.5px;line-height:1.6;">
 <tr><td><b>활혈탕</b> 혈어증 <b>102</b></td><td><b>건근탕</b> 풍한증 <b>002</b></td><td><b>활근탕</b> 습담증 <b>157</b></td></tr>
-<tr><td style="text-align:right;"><span onclick="try{navigator.clipboard.writeText('대조').then(showToast)}catch(e){}" style="cursor:pointer;display:inline-block;background:#0f4c81;color:#fff;font-weight:700;padding:2px 10px;border-radius:12px;">+ 대조 3g</span></td><td style="text-align:right;"><span onclick="try{navigator.clipboard.writeText('구척').then(showToast)}catch(e){}" style="cursor:pointer;display:inline-block;background:#0f4c81;color:#fff;font-weight:700;padding:2px 10px;border-radius:12px;">+ 구척 1.8g</span></td><td style="text-align:right;"><span onclick="try{navigator.clipboard.writeText('천궁').then(showToast)}catch(e){}" style="cursor:pointer;display:inline-block;background:#0f4c81;color:#fff;font-weight:700;padding:2px 10px;border-radius:12px;">+ 천궁 1.4g</span></td></tr>
-<tr><td colspan="3" style="height:8px;"></td></tr>
 <tr><td><b>정척탕</b> 한습증 <b>005</b></td><td><b>안신평위탕</b> 기체증 <b>094</b></td><td><b>갈근탕</b> 습열증 <b>006</b></td></tr>
 <tr><td><b>사백산</b> 풍열증 <b>003</b></td><td><b>평안탕</b> 심양허증 <b>138</b></td><td><b>제통탕</b> 풍습증 <b>004</b></td></tr>
 </table>`;
@@ -1180,10 +1178,20 @@ renderers.referenceNotes = function(container){
   searchRow.appendChild(searchBtn);
   wrap.appendChild(searchRow);
 
-  function buildItemEl(item){
+  function escapeRegExp(s){
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function buildItemEl(item, highlightQuery){
     const li = el('li');
     li.style.cssText = 'padding:9px 0;border-bottom:1px dashed var(--border-color);';
-    const textSpan = el('span', null, item.t + ' ');
+    const textSpan = el('span');
+    if(highlightQuery){
+      const re = new RegExp('(' + escapeRegExp(highlightQuery) + ')', 'gi');
+      textSpan.innerHTML = item.t.replace(re, '<mark style="background:#fef08a;color:#1e293b;padding:0 1px;border-radius:2px;">$1</mark>') + ' ';
+    } else {
+      textSpan.textContent = item.t + ' ';
+    }
     li.appendChild(textSpan);
     const dateSpan = el('span', null, item.l);
     dateSpan.style.cssText = 'color:#94a3b8;font-size:10.5px;white-space:nowrap;';
@@ -1202,7 +1210,7 @@ renderers.referenceNotes = function(container){
       wrap.appendChild(el('div','section-title','▸ '+cat+' ('+hits.length+'건)'));
       const list = el('ol');
       list.style.cssText = 'padding-left:20px;line-height:1.7;font-size:13px;margin-bottom:14px;';
-      hits.forEach(item=>{ list.appendChild(buildItemEl(item)); });
+      hits.forEach(item=>{ list.appendChild(buildItemEl(item, query)); });
       wrap.appendChild(list);
     });
     if(totalHits === 0){
