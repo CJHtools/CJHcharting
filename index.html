@@ -69,7 +69,7 @@ header p { font-size: 13px; opacity: 0.9; }
 <div style="position:absolute;bottom:8px;right:14px;display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
 <div style="position:relative;">
 <button id="offlineSaveBtn" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.4);padding:4px 10px;border-radius:14px;font-size:10.5px;font-weight:600;cursor:pointer;">📥 오프라인 저장</button>
-<span id="updateBadge" title="" style="display:none;position:absolute;top:-7px;right:-7px;background:#e74c3c;color:#fff;font-size:10px;font-weight:900;width:16px;height:16px;border-radius:50%;align-items:center;justify-content:center;cursor:help;">!</span>
+<span id="updateBadge" title="" style="display:none;position:absolute;top:-11px;right:-8px;background:#e74c3c;color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:9px;white-space:nowrap;cursor:help;box-shadow:0 1px 3px rgba(0,0,0,0.3);">새 버전!</span>
 </div>
 <span style="font-size:10px;opacity:0.7;">최종 수정: 2026-08-17</span>
 </div>
@@ -1267,9 +1267,9 @@ async function checkForUpdateBadge(attempt){
   const badge = document.getElementById('updateBadge');
   if(attempt === 1){
     // 첫 시도 시작 시 "확인 중" 상태로 표시
-    badge.style.display = 'flex';
+    badge.style.display = 'inline-block';
     badge.style.background = '#94a3b8';
-    badge.textContent = '?';
+    badge.textContent = '확인중';
     badge.title = '업데이트 확인 중...';
   }
   const localDateMatch = document.documentElement.innerHTML.match(/최종 수정: (\d{4}-\d{2}-\d{2})/);
@@ -1279,31 +1279,31 @@ async function checkForUpdateBadge(attempt){
     const remoteDateMatch = remoteText.match(/최종 수정: (\d{4}-\d{2}-\d{2})/);
     const remoteDate = remoteDateMatch ? remoteDateMatch[1] : null;
     if(remoteDate && localDate && remoteDate > localDate){
-      badge.style.display = 'flex';
+      badge.style.display = 'inline-block';
       badge.style.background = '#e74c3c';
-      badge.textContent = '!';
+      badge.textContent = '새 버전!';
       badge.title = '새 버전(' + remoteDate + ')이 있습니다. "오프라인 저장"을 눌러 최신본을 받아주세요.';
     } else {
-      badge.style.display = 'flex';
+      badge.style.display = 'inline-block';
       badge.style.background = '#16a34a';
-      badge.textContent = '✓';
+      badge.textContent = '최신버전';
       badge.title = '최신 버전입니다. (' + (localDate || '') + ')';
     }
   } catch(e){
     console.error('업데이트 확인 실패(시도 ' + attempt + '/3):', e);
     if(attempt < 3){
       // 재시도 예정 -> "확인 중" 상태 유지
-      badge.style.display = 'flex';
+      badge.style.display = 'inline-block';
       badge.style.background = '#94a3b8';
-      badge.textContent = '?';
+      badge.textContent = '확인중';
       badge.title = '업데이트 확인 중... (' + attempt + '/3)';
       setTimeout(()=>{ checkForUpdateBadge(attempt + 1); }, 2000);
       return;
     }
     // 3회 모두 실패한 경우에만 "연결 안됨"으로 확정 표시
-    badge.style.display = 'flex';
+    badge.style.display = 'inline-block';
     badge.style.background = '#475569';
-    badge.textContent = '✕';
+    badge.textContent = '연결안됨';
     badge.title = '인터넷 연결 안됨 — 업데이트 여부를 확인할 수 없습니다. (' + (e && e.message ? e.message : e) + ')';
   }
 }
