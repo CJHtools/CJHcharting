@@ -1271,8 +1271,12 @@ async function checkForUpdateBadge(){
       badge.style.background = '#e74c3c';
       badge.textContent = '!';
       badge.title = '새 버전(' + remoteDate + ')이 있습니다. "오프라인 저장"을 눌러 최신본을 받아주세요.';
+    } else {
+      badge.style.display = 'flex';
+      badge.style.background = '#16a34a';
+      badge.textContent = '✓';
+      badge.title = '최신 버전입니다. (' + (localDate || '') + ')';
     }
-    // 같거나 로컬이 더 최신이면 배지 표시 안 함
   } catch(e){
     // 인터넷 연결 안 됨 -> 회색 배지로 "오프라인 상태" 안내 (경고성 빨간색과 구분)
     badge.style.display = 'flex';
