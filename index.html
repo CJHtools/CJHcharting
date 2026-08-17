@@ -1225,8 +1225,12 @@ async function fetchLatestSource(){
     try{
       const res = await fetch(src + '?_t=' + Date.now(), { cache: 'no-store' });
       if(res.ok) return res.text();
-      lastErr = new Error('HTTP ' + res.status);
-    } catch(e){ lastErr = e; }
+      lastErr = new Error('HTTP ' + res.status + ' from ' + src);
+      console.warn('시도 실패:', src, res.status);
+    } catch(e){
+      lastErr = e;
+      console.warn('시도 중 오류:', src, e);
+    }
   }
   throw lastErr || new Error('모든 주소 시도 실패');
 }
@@ -1257,9 +1261,17 @@ async function saveOfflineCopy(){
 }
 document.getElementById('offlineSaveBtn').onclick = saveOfflineCopy;
 
-async function checkForUpdateBadge(){
+async function checkForUpdateBadge(attempt){
+  attempt = attempt || 1;
   if(location.protocol !== 'file:') return; // 웹 버전은 항상 최신이므로 체크 불필요
   const badge = document.getElementById('updateBadge');
+  if(attempt === 1){
+    // 첫 시도 시작 시 "확인 중" 상태로 표시
+    badge.style.display = 'flex';
+    badge.style.background = '#94a3b8';
+    badge.textContent = '?';
+    badge.title = '업데이트 확인 중...';
+  }
   const localDateMatch = document.documentElement.innerHTML.match(/최종 수정: (\d{4}-\d{2}-\d{2})/);
   const localDate = localDateMatch ? localDateMatch[1] : null;
   try{
@@ -1278,11 +1290,21 @@ async function checkForUpdateBadge(){
       badge.title = '최신 버전입니다. (' + (localDate || '') + ')';
     }
   } catch(e){
-    // 인터넷 연결 안 됨 -> 회색 배지로 "오프라인 상태" 안내 (경고성 빨간색과 구분)
+    console.error('업데이트 확인 실패(시도 ' + attempt + '/3):', e);
+    if(attempt < 3){
+      // 재시도 예정 -> "확인 중" 상태 유지
+      badge.style.display = 'flex';
+      badge.style.background = '#94a3b8';
+      badge.textContent = '?';
+      badge.title = '업데이트 확인 중... (' + attempt + '/3)';
+      setTimeout(()=>{ checkForUpdateBadge(attempt + 1); }, 2000);
+      return;
+    }
+    // 3회 모두 실패한 경우에만 "연결 안됨"으로 확정 표시
     badge.style.display = 'flex';
-    badge.style.background = '#94a3b8';
-    badge.textContent = '?';
-    badge.title = '인터넷 접속 불가 — 업데이트 여부를 확인할 수 없습니다.';
+    badge.style.background = '#475569';
+    badge.textContent = '✕';
+    badge.title = '인터넷 연결 안됨 — 업데이트 여부를 확인할 수 없습니다. (' + (e && e.message ? e.message : e) + ')';
   }
 }
 
