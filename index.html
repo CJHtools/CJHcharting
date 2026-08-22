@@ -445,7 +445,8 @@ const SHOCKWAVE_DX = [
   ["팔꿈치 관절","외측상과염","M77.1"],
   ["팔꿈치 관절","내측상과염","M77.0"],
   ["고관절","대퇴골돌기윤활낭염","M70.6"],
-  ["고관절","둔부힘줄염","M76.0~M76.5"],
+  ["고관절","대퇴골돌기힘줄염","M70.6"],
+  ["고관절","둔부힘줄염","M76.0~M76.5",{deprecated:true, note:"삼성화재 지급거부"}],
   ["슬관절","슬개건염","M76.5"],
   ["발목관절","아킬레스건염","M76.6"],
   ["족부","족저근막염","M72.2"],
@@ -456,6 +457,7 @@ const SHOCKWAVE_CONTRA = ["임신","출혈성 질환 또는 항응고제 복용"
 
 const REFERENCE_NOTES = {
   "자보(자동차보험) 잡다": [
+    { t: "자보는 수납 과정이 없어서, 일반 오더를 넘긴 뒤 20~30분 지나서 탕약 오더가 들어오면 한약국에서 인지를 못 할 수 있음. 늦게 탕약을 넣는 경우에는 한약국에 메시지로 해당 내용 전달 요함.", d: "2026-08-18", l: "2026-08-18" },
     { t: "자보환자 두통 초기에 CT 의뢰해서 뇌진탕 진단 받아두면 8주 제한에 안 걸림", d: "2026-08-15", l: "2026-08-15" },
     { t: "자동차보험 치료기간 8주 제한 시행됨 (향후 치료비 안 나옴) — 신규 규정", d: "2026-08-10", l: "2026-08-10" },
     { t: "한방치료 없이 자보도수만 있는 경우 추가진단서 발급이 안 됨", d: "2026-08-03", l: "2026-08-03" },
@@ -970,11 +972,21 @@ function renderShockwavePlaceholder(container){
   const thead = el('tr'); ['부위','진단명','KCD 코드'].forEach(h=>thead.appendChild(el('th',null,h)));
   table.appendChild(thead);
   SHOCKWAVE_DX.forEach(r=>{
+    const meta = r[3];
     const tr = el('tr');
     tr.style.cursor='pointer';
     if(state.shockwaveDx && state.shockwaveDx[0]===r[0] && state.shockwaveDx[1]===r[1]) tr.style.background='var(--primary-light)';
     tr.onclick = ()=>{ state.shockwaveDx = r; container.innerHTML=''; renderers.westernReferral(container); };
-    r.forEach(c=>tr.appendChild(el('td',null,c)));
+    [r[0], r[1], r[2]].forEach((c,i)=>{
+      const td = el('td');
+      if(meta && meta.deprecated){
+        td.innerHTML = '<span style="text-decoration:line-through;color:#94a3b8;">' + c + '</span>'
+          + (i===1 ? ' <sub style="color:#c0392b;font-size:10px;text-decoration:none;">' + meta.note + '</sub>' : '');
+      } else {
+        td.textContent = c;
+      }
+      tr.appendChild(td);
+    });
     table.appendChild(tr);
   });
   input.appendChild(table);
