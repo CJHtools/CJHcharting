@@ -237,7 +237,7 @@ Flexion 45 통증 Extension 10
 Lat. bending 20/30 Rotation 35/55
 Neologic test
 Motor : intact
-Sensory : 좌둔부통증, 좌하지후면저림.`,
+Sensory : 우둔부통증, 우하지후면저림.`,
   "C-spine": `* 환자 지속적 치료 및 및 안정 휴식에도 불구하고 경추통을 지속적으로 호소하여 X-ray 검사상의 이상 소견과 타박으로 인한 단순근육염좌 이외의 경추부 신경학적 이상 유무 확인을 위한 정밀검사 필요하리라 판단되어, C-spine MRI 시행하기로 함.
 Compression (+-) spurling +/-
 ROM
@@ -245,7 +245,7 @@ Flexion 45 통증 Extension 10
 Lat. bending 20/20 Rotation 45/60
 Neologic test
 Motor : intact
-Sensory : 좌상지저림, 좌견갑내측저림.`,
+Sensory : 우상지저림, 우견갑내측저림.`,
   "Hip Joint": `* 환자 집중적인치료 및 안정 휴식에도 불구하고 지속적인 허리 및 고관절 통증 호소하며 호전보이지 않아, X-ray 검사상의 이상 소견과 타박으로 인한 단순근육염좌 아닌 연부조직의 이상유무 확인하기 위한 정밀검사 필요하리라 사료되어 Hip joint MRI 검사 시행하기로 결정함.
 <Hip Joint P.E>
 FABER +-/-
@@ -293,7 +293,7 @@ function restoreLRWords(text){
   return out;
 }
 function examTextForSide(baseText, side){
-  if(side === 'right') return restoreLRWords(swapLR(mirrorPairs(protectLRWords(baseText))));
+  if(side === 'left') return restoreLRWords(swapLR(mirrorPairs(protectLRWords(baseText))));
   if(side === 'both') return restoreLRWords(bothLR(duplicateFirstPairs(protectLRWords(baseText))));
   return baseText;
 }
@@ -620,7 +620,7 @@ const state = {
   sanjaeManualOpt: null,
   insuranceManualOpt: null,
   mriPart: null,
-  mriSide: "left",
+  mriSide: "right",
   muscleTexture: null,
   cva: { mental:null, plegiaLoc:[], plegiaGrade:null, speech:[], dysphagia:null, dysuria:null, dyspnea:null, etc:"" },
   fluidPicked: [],
@@ -793,7 +793,7 @@ renderers.mriRequest = function(container){
     sgrp.appendChild(tagBtn(label, state.mriSide===id, ()=>{ state.mriSide=id; renderers.mriRequest(container); }));
   });
   input.appendChild(sgrp);
-  input.appendChild(el('div','desc-line','* 등록된 원자료는 좌측 기준이며, 우측/양측 선택 시 수치와 좌·우 표현이 자동으로 바뀝니다. 예외적인 소견은 복사 후 직접 확인해주세요.'));
+  input.appendChild(el('div','desc-line','* 등록된 원자료는 우측 기준이며, 좌측/양측 선택 시 수치와 좌·우 표현이 자동으로 바뀝니다. 예외적인 소견은 복사 후 직접 확인해주세요.'));
   grid.appendChild(input);
   grid.appendChild(outputPanel('mriRequest','MRI 검사의뢰양식'));
   container.appendChild(grid);
