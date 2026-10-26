@@ -71,6 +71,7 @@ header p { font-size: 13px; opacity: 0.9; }
 <button id="offlineSaveBtn" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.4);padding:4px 10px;border-radius:14px;font-size:10.5px;font-weight:600;cursor:pointer;">📥 오프라인 저장</button>
 <span id="updateBadge" title="" style="display:none;position:absolute;top:-11px;right:-8px;background:#e74c3c;color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:9px;white-space:nowrap;cursor:help;box-shadow:0 1px 3px rgba(0,0,0,0.3);">새 버전!</span>
 </div>
+<button id="releaseNotesBtn" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.4);padding:4px 10px;border-radius:14px;font-size:10.5px;font-weight:600;cursor:pointer;">🛠 업데이트 내역</button>
 <span id="lastModifiedSpan" style="font-size:10px;opacity:0.7;">최종 수정: 확인 중...</span>
 </div>
 </header>
@@ -292,6 +293,143 @@ const MUSCLE_TEXTURE = {
 요추 및 골반대의 실질적인 변위 및 근육의 기능이상을 확인할 필요가 있다고 사료되어 경근무늬측정검사를 진행함.
 특히 요추부 손상이 골반대로 연계되어 나타나는 이차적 증상의 객관적 평가를 위함.`
 };
+
+/* 경근무늬측정검사 "결과 평가기" — 사용자가 통합/정리한 로직을 그대로 포팅(내용 변경 없음) */
+const MOIRE = (function(){
+  const pad = n => String(n).padStart(2, '0');
+  const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  const sgn = v => v > 0 ? 1 : v < 0 ? -1 : 0;
+
+  const GROUPS = [['광배근', '상완삼두근', '극하근'], ['상부승모근', '견갑거근'],
+                  ['요방형근', '척추기립근'], ['중둔근', '장경인대']];
+  const ACU = {
+    견갑거근: ['견정', '풍지', '견외수'], 상부승모근: ['견정', '풍지'],
+    광배근: ['노수'], 극하근: ['노수'], 상완삼두근: ['청령'],
+    요방형근: ['신수'], 척추기립근: ['격수'], 심부근: ['격수'],
+    중둔근: ['환도', '거료'], 장경인대: ['풍시']
+  };
+
+  const parse = t => {
+    const g = r => { const m = t.match(r); return m ? (m[1] || m[2] || null) : null; };
+    return {
+      s: parseFloat(g(/어깨\s*:?\s*(-?\d+(?:\.\d+)?)(?![\d.]*:)/)),
+      p: parseFloat(g(/골반\s*:?\s*(-?\d+(?:\.\d+)?)(?![\d.]*:)/)),
+      lc: g(/좌측\s*등고선\s*개수\s*:\s*(\d+)|등고선:\s*좌\s*(\d+)/),
+      rc: g(/우측\s*등고선\s*개수\s*:\s*(\d+)|등고선:\s*좌\s*\d+\s*\/\s*우\s*(\d+)/),
+      gap: g(/등고선\s*간격\s*:\s*([^\s\/]+)/),
+      diff: g(/좌우측\s*등고선\s*개수\s*차이\s*:\s*([^\s\/]+)/),
+      sh: g(/어깨\s*높이\s*차이\s*:\s*([^\s\/]+)/),
+      sr: g(/어깨\s*(?:좌우측\s*길이\s*비율\s*:\s*)?(\d[\d.]*:\d[\d.]*)/),
+      pr: g(/골반\s*(?:좌우측\s*길이\s*비율\s*:\s*)?(\d[\d.]*:\d[\d.]*)/)
+    };
+  };
+
+  const cmpLevel = (a, b) => {
+    if (a === b) return '변화 없음, 1차 긴장 유지';
+    const x = sgn(a), y = sgn(b);
+    if (y === 0) return '수평 회복';
+    if (x === 0) return '수평에서 새로 기울어짐(신규 긴장)';
+    if (x !== y) return '부호 반전, 반대측 근육군 신규 긴장';
+    return Math.abs(b) < Math.abs(a) ? '1차 긴장 근육군 긴장 감소' : '1차 긴장 근육군 긴장 증가';
+  };
+
+  const imb = r => {
+    const [a, b] = (r || '').split(':').map(parseFloat);
+    return a > 0 && b > 0 ? Math.max(a / b, b / a) - 1 : null;
+  };
+  const cmpRatio = (r1, r2) => {
+    const a = imb(r1), b = imb(r2);
+    if (a === null || b === null) return null;
+    return Math.abs(a - b) < 0.001 ? '불균형 유지' : b < a ? '불균형 완화' : '불균형 심화';
+  };
+
+  const side = (v, flip) => ((v < 0) !== flip) ? '우측' : '좌측';
+
+  function generate(t1, t2, examDate){
+    const isCmp = (t2 || '').trim() !== '';
+    const d1 = parse(t1 || '');
+    const d2 = isCmp ? parse(t2) : null;
+    if (isNaN(d1.s) || isNaN(d1.p) || (isCmp && (isNaN(d2.s) || isNaN(d2.p)))){
+      return { error: '어깨/골반 수평도 값을 찾을 수 없습니다. 형식을 확인해 주세요.' };
+    }
+
+    const cur = isCmp ? d2 : d1;
+    let head = '';
+
+    if (!isCmp) {
+      head = `[측정 요약]\n- 수평도: 어깨 ${d1.s} / 골반 ${d1.p}\n`;
+      const r = [d1.sr && `어깨 ${d1.sr}`, d1.pr && `골반 ${d1.pr}`].filter(Boolean);
+      if (r.length) head += `- 길이비: ${r.join(' / ')}\n`;
+      const ex = [d1.gap && `간격 ${d1.gap}`, d1.diff && `차이 ${d1.diff}`, d1.sh && `어깨높이차 ${d1.sh}`].filter(Boolean);
+      if (d1.lc !== null && d1.rc !== null) head += `- 등고선: 좌 ${d1.lc} / 우 ${d1.rc}${ex.length ? ` (${ex.join(', ')})` : ''}\n`;
+      else if (ex.length) head += `- 세부: ${ex.join(', ')}\n`;
+    } else {
+      head = `[1차 → 2차 변화]\n`;
+      head += `- 어깨 수평도 ${d1.s} → ${d2.s}: ${cmpLevel(d1.s, d2.s)}\n`;
+      head += `- 골반 수평도 ${d1.p} → ${d2.p}: ${cmpLevel(d1.p, d2.p)}\n`;
+      const sr = cmpRatio(d1.sr, d2.sr), pr = cmpRatio(d1.pr, d2.pr);
+      if (sr) head += `- 어깨 길이비 ${d1.sr} → ${d2.sr}: ${sr}\n`;
+      if (pr) head += `- 골반 길이비 ${d1.pr} → ${d2.pr}: ${pr}\n`;
+      if (d1.lc && d2.lc) head += `- 등고선(좌/우) ${d1.lc}/${d1.rc} → ${d2.lc}/${d2.rc}\n`;
+    }
+    head += '\n';
+
+    let kept = 0;
+    const m = GROUPS.map(g => {
+      const found = isCmp && g.find(x => t1.includes(x));
+      if (found) { kept++; return found; }
+      return pick(g);
+    });
+    const note = isCmp
+      ? (kept ? `1차 차트에서 근육 ${kept}개를 이어받았습니다.` : '1차 입력에 근육 정보가 없어 랜덤으로 선택했습니다.')
+      : '';
+
+    const { s, p } = cur;
+    const used = [], R = [];
+    if (s !== 0) {
+      R.push({ part: '경추부', ms: `${side(s, false)} ${m[0]}, ${side(s, true)} ${m[1]}`, pain: '견갑대' });
+      used.push(m[0], m[1]);
+    }
+    if (s * p < 0) {
+      R.push({ part: '흉추부', ms: `${side(s, false)} 심부근`, pain: '흉추부' });
+      used.push('심부근');
+    }
+    if (p !== 0) {
+      R.push({ part: '흉요추부', ms: `${side(p, true)} ${m[2]}, ${side(p, false)} ${m[3]}`, pain: '요둔부' });
+      used.push(m[2], m[3]);
+    }
+    const acu = [...new Set(used.flatMap(x => ACU[x] || []))].join(', ');
+
+    let fu = '';
+    if (!isCmp && examDate) {
+      const [y, mo, dd] = examDate.split('-').map(Number);
+      const f = new Date(y, mo - 1, dd + 28);
+      const fd = `${String(f.getFullYear()).slice(-2)}-${pad(f.getMonth() + 1)}-${pad(f.getDate())}`;
+      fu = R.length ? `\n\n※ 4주 뒤(${fd}) 재촬영 예정` : `\n\n※ 4주 뒤(${fd}) 불균형 재평가 예정`;
+    }
+
+    const title = isCmp ? '▶ 2차 검사 기준 평가' : '경근무늬측정검사 결과';
+    let body;
+    if (!R.length) {
+      body = `${title}\n뚜렷한 좌우 수평 불균형 소견 없음.\n불균형이 크지 않아 통증 양상에 따라 치료 예정.`;
+    } else {
+      const T = [
+        () => `${title}\n` + R.map(r => `- ${r.part} 손상에 수반된 ${r.ms} 구축이 ${r.pain} 통증의 원인으로 확인됨.`).join('\n') +
+              `\n\n침 치료는 ${acu} 위주로 자침하고 약침을 병행함.\n추나요법은 경추·요추 신연기법으로 견갑대 및 골반부 근육 불균형을 교정함.`,
+        () => `${title}\n` + R.map(r => `▶ ${r.part}: ${r.ms} 구축 → ${r.pain} 통증 유발`).join('\n') +
+              `\n▶ 치료: ${acu} 자침 및 약침 / 경추·요추 신연기법 추나`,
+        () => `${title}\n` + R.map(r => `${r.part}는 ${r.ms} 구축으로 ${r.pain} 통증이 유발된 상태`).join('이며, ') + '입니다.' +
+              ` 이에 ${acu} 등에 자침 및 약침을 시행하고, 경추·요추 신연기법 추나로 상하부 근육 불균형을 교정할 예정입니다.`
+      ];
+      body = pick(T)();
+    }
+
+    return { text: head + body + fu, note, isCmp };
+  }
+
+  return { ymd, generate };
+})();
 
 const INSURANCE_GENERAL_TEXT = `S>
 #1.
@@ -621,6 +759,57 @@ const REFERENCE_NOTES = {
   ],
 };
 
+/* 도구 자체의 기능/코드 변경 이력 (유의사항=임상·청구 정책 메모와는 별개). 최신순.
+   과거 항목(2026-09-15 이전)은 GitHub 커밋 날짜 기준으로 소급 정리한 것으로, 세부 커밋 단위까지는 대략적으로 묶은 것임 */
+const RELEASE_NOTES = [
+  { d: "2026-10-26", t: "자보 차팅·수기요법(복잡추나) 출력 길이 축소: 이학적검진 2줄→1줄 압축, 체형분석 안내 문구 삭제, 교육문구·한약설명 문장 축약, C/L-spine 상단 블록 한 줄 병합 (복잡추나 기준 총 14줄 절감)" },
+  { d: "2026-10-26", t: "경근무늬검사 탭에 \"결과 평가기\" 서브탭 신설 — 측정값(어깨/골반 수평도 등) 입력 시 첫 평가/재평가(전후비교)를 자동 판별해 평가문·치료계획을 생성" },
+  { d: "2026-09-15", t: "자보 차팅에 \"8주 초과 치료 필요성 소견\" 모달 기능 신설 (고령·기저질환·장애인·영상소견 선택 → 문장 자동완성, 실시간 미리보기)" },
+  { d: "2026-09-12", t: "MRI 검사의뢰양식 좌/우 기준 전체 반전 (기존 좌측 기준 → 우측 기준으로 전환, 수치쌍·좌우 표현 자동반전 로직 함께 수정)" },
+  { d: "2026-08-27", t: "양방의뢰 탭에 \"의보도수의뢰\" 서브탭 신설" },
+  { d: "2026-08-24", t: "헤더 \"최종 수정일\"을 GitHub 커밋 기록 기반 자동 조회 방식으로 전환(기존 하드코딩 방식 제거), 오프라인 저장본에 저장 시점 날짜를 자동 기록하는 방식 도입" },
+  { d: "2026-08-22", t: "충격파 차팅 고관절 코드 세분화(대퇴골돌기힘줄염 M70.6 분리), 둔부힘줄염 항목에 취소선+\"삼성화재 지급거부\" 표시 추가" },
+  { d: "2026-08-17", t: "Knee MRI 양성소견 위치 오류 수정 및 라벨 통일, \"오프라인 저장\" 버튼 최초 도입, 유의사항 데이터에 날짜 필드 추가(이전: 단순 텍스트 목록)" },
+  { d: "2026-08-15", t: "GitHub Pages 최초 배포 — 비밀번호 보호, 8탭 구조(자보차팅/수기요법/MRI검사의뢰/경근무늬검사/의보차팅/수액설명/양방의뢰/유의사항) 및 기본 기능 전체 포함" },
+];
+
+function renderReleaseNotesModal(){
+  const overlay = el('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;';
+  overlay.onclick = (e)=>{ if(e.target === overlay) overlay.remove(); };
+
+  const box = el('div');
+  box.style.cssText = 'background:#fff;border-radius:10px;max-width:640px;width:100%;max-height:80vh;overflow-y:auto;padding:22px;box-shadow:0 10px 30px rgba(0,0,0,0.25);';
+
+  const head = el('div');
+  head.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;';
+  head.appendChild(el('div','section-title','🛠 업데이트 내역'));
+  const closeBtn = el('button', null, '✕');
+  closeBtn.type = 'button';
+  closeBtn.style.cssText = 'border:none;background:none;font-size:18px;cursor:pointer;color:#64748b;';
+  closeBtn.onclick = ()=> overlay.remove();
+  head.appendChild(closeBtn);
+  box.appendChild(head);
+
+  box.appendChild(el('div','desc-line','* 유의사항(임상·청구 정책 메모)과 별개로, 이 도구 자체의 기능/코드 변경 이력입니다. 2026-09-15 이전 항목은 GitHub 커밋 날짜 기준 소급 정리로, 세부 내용은 대략적으로 묶었습니다.'));
+
+  RELEASE_NOTES.forEach(item=>{
+    const row = el('div');
+    row.style.cssText = 'padding:10px 0;border-bottom:1px dashed #e2e8f0;';
+    const dateSpan = el('span', null, item.d);
+    dateSpan.style.cssText = 'display:inline-block;font-size:11px;font-weight:700;color:#0f4c81;background:#eaf2f8;padding:2px 8px;border-radius:10px;margin-bottom:5px;';
+    row.appendChild(dateSpan);
+    const textDiv = el('div', null, item.t);
+    textDiv.style.cssText = 'font-size:13.5px;line-height:1.5;margin-top:4px;';
+    row.appendChild(textDiv);
+    box.appendChild(row);
+  });
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+}
+document.getElementById('releaseNotesBtn').onclick = renderReleaseNotesModal;
+
 
 /* =========================================================
    2. 상태값
@@ -651,7 +840,8 @@ const state = {
   shockwaveDx: null,
   shockwaveContra: [],
   psPrior:"", psNrsBefore:"", psNrsAfter:"", psSCodeConfirmed:false, psSecondaryDx:null,
-  activeSub: { manualTherapy:"complex", insuranceChart:"general", westernReferral:"jaboManual" }
+  activeSub: { manualTherapy:"complex", insuranceChart:"general", westernReferral:"jaboManual", muscleTexture:"reason" },
+  moire: { examDate: "", in1: "", in2: "" }
 };
 
 /* =========================================================
@@ -991,9 +1181,8 @@ renderers.mriRequest = function(container){
   setOutput('mriRequest', state.mriPart ? examTextForSide(EXAM_PARTS[state.mriPart], state.mriSide) : '(좌측에서 부위를 선택해주세요)');
 };
 
-// 4. 경근무늬검사
-renderers.muscleTexture = function(container){
-  container.innerHTML = '';
+// 4. 경근무늬검사 (서브: 시행사유/결과 평가기)
+function renderMuscleTextureReason(container){
   const grid = el('div','grid-layout');
   const input = el('div','input-panel');
   input.appendChild(el('div','section-title','■ 부위 선택 (1개)'));
@@ -1006,6 +1195,88 @@ renderers.muscleTexture = function(container){
   grid.appendChild(outputPanel('muscleTexture','경근무늬검사 시행사유'));
   container.appendChild(grid);
   setOutput('muscleTexture', state.muscleTexture ? MUSCLE_TEXTURE[state.muscleTexture] : '(좌측에서 부위를 선택해주세요)');
+}
+
+function renderMuscleTextureEvaluator(container){
+  const grid = el('div','grid-layout');
+  const input = el('div','input-panel');
+
+  const titleRow = el('div');
+  titleRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;';
+  titleRow.appendChild(el('div','section-title','■ 측정값 입력'));
+  const badge = el('span','', state.moire.in2.trim() ? '재평가 (전후 비교)' : '첫 평가');
+  badge.style.cssText = 'font-size:13px;padding:3px 10px;border-radius:12px;font-weight:bold;'
+    + (state.moire.in2.trim() ? 'background:#fdebd0;color:#b9770e;' : 'background:#eaf2f8;color:#2980b9;');
+  titleRow.appendChild(badge);
+  input.appendChild(titleRow);
+
+  input.appendChild(el('div','desc-line','* 검사 날짜(첫 평가 시 4주 뒤 재촬영일 계산용), 1차 검사 결과, (재평가 시) 2차 검사 결과를 입력 후 "결과 생성"을 누르세요.'));
+
+  const dateLabel = el('div'); dateLabel.style.cssText='font-weight:bold;color:#2980b9;margin:8px 0 4px;font-size:13px;';
+  dateLabel.textContent = '검사 날짜';
+  input.appendChild(dateLabel);
+  const dateInput = el('input','text-input'); dateInput.type='date'; dateInput.value = state.moire.examDate;
+  dateInput.oninput = (e)=>{ state.moire.examDate = e.target.value; };
+  input.appendChild(dateInput);
+
+  const in1Label = el('div'); in1Label.style.cssText='font-weight:bold;color:#2980b9;margin:8px 0 4px;font-size:13px;';
+  in1Label.textContent = '1차 검사 결과 (재평가 시 1차 차트 내용을 통째로 붙여넣어도 됨)';
+  input.appendChild(in1Label);
+  const in1 = el('textarea','text-input'); in1.style.height='140px'; in1.placeholder='어깨 : -2.9 / 골반 : 1.5\n좌측 등고선 개수 : 3개\n어깨 좌우측 길이 비율 : 1:1.11';
+  in1.value = state.moire.in1;
+  in1.oninput = (e)=>{ state.moire.in1 = e.target.value; };
+  input.appendChild(in1);
+
+  const in2Label = el('div'); in2Label.style.cssText='font-weight:bold;color:#2980b9;margin:8px 0 4px;font-size:13px;';
+  in2Label.textContent = '2차 검사 결과 (비워두면 첫 평가, 입력하면 전후 비교)';
+  input.appendChild(in2Label);
+  const in2 = el('textarea','text-input'); in2.style.height='140px'; in2.placeholder='재평가 시에만 입력';
+  in2.value = state.moire.in2;
+  in2.oninput = (e)=>{
+    state.moire.in2 = e.target.value;
+    const cmp = e.target.value.trim() !== '';
+    badge.textContent = cmp ? '재평가 (전후 비교)' : '첫 평가';
+    badge.style.cssText = 'font-size:13px;padding:3px 10px;border-radius:12px;font-weight:bold;'
+      + (cmp ? 'background:#fdebd0;color:#b9770e;' : 'background:#eaf2f8;color:#2980b9;');
+  };
+  input.appendChild(in2);
+
+  const noteDiv = el('div'); noteDiv.id = 'moireNote'; noteDiv.style.cssText='font-size:12px;color:#7f8c8d;margin-top:8px;min-height:16px;';
+  const genBtn = el('button','btn-copy','결과 생성');
+  genBtn.style.background = '#3498db';
+  genBtn.onclick = ()=>{
+    const isCmp = state.moire.in2.trim() !== '';
+    if(!isCmp && !state.moire.examDate){ alert('검사 날짜를 선택해 주세요.'); return; }
+    const result = MOIRE.generate(state.moire.in1, state.moire.in2, state.moire.examDate);
+    if(result.error){ alert(result.error); return; }
+    setOutput('muscleTextureEval', result.text);
+    document.getElementById('moireNote').textContent = result.note || '';
+  };
+  input.appendChild(genBtn);
+  input.appendChild(noteDiv);
+
+  grid.appendChild(input);
+  grid.appendChild(outputPanel('muscleTextureEval','경근무늬검사 평가 결과'));
+  container.appendChild(grid);
+  setOutput('muscleTextureEval', '(측정값 입력 후 "결과 생성"을 눌러주세요)');
+}
+
+renderers.muscleTexture = function(container){
+  container.innerHTML = '';
+  const subItems = [
+    {id:"reason", label:"시행사유"},
+    {id:"evaluator", label:"결과 평가기"},
+  ];
+  container.appendChild(subTabBar(subItems, state.activeSub.muscleTexture, (id)=>{
+    state.activeSub.muscleTexture = id;
+    container.innerHTML = '';
+    renderers.muscleTexture(container);
+  }));
+  if(state.activeSub.muscleTexture === 'evaluator'){
+    renderMuscleTextureEvaluator(container);
+  } else {
+    renderMuscleTextureReason(container);
+  }
 };
 
 // 5. 의보차팅 (서브: 일반/디스크·협착증/CVA)
