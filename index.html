@@ -766,6 +766,7 @@ const REFERENCE_NOTES = {
 /* 도구 자체의 기능/코드 변경 이력 (유의사항=임상·청구 정책 메모와는 별개). 최신순.
    과거 항목(2026-09-15 이전)은 GitHub 커밋 날짜 기준으로 소급 정리한 것으로, 세부 커밋 단위까지는 대략적으로 묶은 것임 */
 const RELEASE_NOTES = [
+  { d: "2026-10-28", t: "8주 소견 문장 개선: 한 문장에 여러 내용이 이어져 비문이 되던 문제를 해결하기 위해 \"기왕력·영상소견\" / \"치료 경과\" / \"결론\" 3문장으로 분리" },
   { d: "2026-10-27", t: "버그 수정: 이미 로그인된 상태에서 새로고침하면 헤더 \"최종 수정\"이 \"확인 중...\"에서 멈추고 업데이트 확인 배지가 작동하지 않던 문제 수정" },
   { d: "2026-10-27", t: "헤더 정리: \"오프라인 저장\"·\"업데이트 내역\" 버튼 폭을 동일하게 맞추고 아이콘을 흰색 선 아이콘으로 통일, 하단 및 업데이트 내역 제목줄 우측에 건의사항·오류 제보 안내 문구 추가" },
   { d: "2026-10-27", t: "8주 초과 치료 소견 모달 보강: ①기저질환별 \"수술 기왕력\" 토글(수술명 제외) ②치료 경과 섹션 신설 — 초진 NRS 6 기준 현재 NRS 입력 시 경과 문장 생성, 경과유형(호전 더딤/호전 후 정체/호전과 악화 반복) 선택 ③ROM 경과(선택): 부위(경추/요추/어깨/무릎/기타, 기저질환에서 자동 추정)와 호전도(5~25% 또는 정성 표현)를 의료진이 직접 선택 ④선택 시 모달 스크롤 위치 유지 ⑤고령환자·장애인 선택을 한 섹션으로 통합" },
@@ -1050,13 +1051,13 @@ function buildEightWeekCourse(ew){
     const regs = eightWeekRegions(ew);
     const r = (regs.length ? regs.map(x=>x.replace(/부$/,'')).join('·') : '해당') + ' 부위';
     let romPhrase;
-    if(rom.pct) romPhrase = 'ROM도 ' + r + ' 초진 대비 약 ' + rom.pct + '% 호전에 그치는 등';
-    else if(rom.id==='limit') romPhrase = r + ' ROM 제한이 지속되는 등';
-    else if(rom.id==='slight') romPhrase = r + ' ROM도 경미한 호전에 그치는 등';
-    else romPhrase = r + ' ROM도 호전이 정체되는 등';
-    return s + '이며, ' + romPhrase + ' ';
+    if(rom.pct) romPhrase = r + ' ROM도 초진 대비 약 ' + rom.pct + '% 호전에 그침';
+    else if(rom.id==='limit') romPhrase = r + ' ROM 제한이 지속됨';
+    else if(rom.id==='slight') romPhrase = r + ' ROM도 경미한 호전에 그침';
+    else romPhrase = r + ' ROM도 호전이 정체됨';
+    return s + '이며, ' + romPhrase + '.';
   }
-  return s + '로, ';
+  return s + '임.';
 }
 
 function buildEightWeekSentence(ew){
@@ -1069,19 +1070,24 @@ function buildEightWeekSentence(ew){
   );
   if(ew.imaging.etc && ew.imaging.etcText) imagingList.push(ew.imaging.etcText);
 
+  const idParts = [];
+  if(ew.elderly) idParts.push('고령환자(만65세 이상)');
+  if(ew.disabled.checked) idParts.push((ew.disabled.text || '[유형/등급 기입]') + ' 장애인');
   const leadParts = [];
-  if(ew.elderly) leadParts.push('고령환자(만65세 이상)');
-  if(ew.disabled.checked) leadParts.push((ew.disabled.text || '[유형/등급 기입]') + ' 장애인');
   if(chronicPlain.length) leadParts.push(chronicPlain.join(', ') + ' 기왕력');
   chronicSurg.forEach(l=> leadParts.push(l + ' 수술 기왕력'));
 
-  if(!leadParts.length && !imagingList.length) return '(항목을 1개 이상 선택해주세요)';
+  if(!idParts.length && !leadParts.length && !imagingList.length) return '(항목을 1개 이상 선택해주세요)';
 
   let sentence = '상기 환자는 ';
-  if(leadParts.length) sentence += leadParts.join(', ') + '이 있으며, ';
-  if(imagingList.length) sentence += '교통사고로 인해 시행한 영상 검사 상 ' + imagingList.join(', ') + ' 등의 객관적 이상 소견 확인되어, ';
-  sentence += buildEightWeekCourse(ew);
-  sentence += '8주 초과시에도 지속적인 치료가 필요할 것으로 사료됨.';
+  const clauses = [];
+  if(idParts.length) clauses.push(idParts.join(' 및 ') + (leadParts.length || imagingList.length ? '이며' : '임'));
+  if(leadParts.length) clauses.push(leadParts.join(', ') + (imagingList.length ? '이 있으며' : '이 있음'));
+  if(imagingList.length) clauses.push('교통사고로 인해 시행한 영상 검사 상 ' + imagingList.join(', ') + ' 등의 객관적 이상 소견이 확인됨');
+  sentence += clauses.join(', ') + '.';
+  const course = buildEightWeekCourse(ew);
+  if(course) sentence += ' ' + course;
+  sentence += ' 이에 8주 초과시에도 지속적인 치료가 필요할 것으로 사료됨.';
   return '[장기치료가 필요한 사유]\n' + sentence;
 }
 
