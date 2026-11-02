@@ -1413,11 +1413,16 @@ function renderMuscleTextureEvaluator(container){
     setOutput('muscleTextureEval', result.text);
     document.getElementById('moireNote').textContent = result.note || '';
   };
-  input.appendChild(genBtn);
+  noteDiv.style.marginTop = '4px';
   input.appendChild(noteDiv);
-
+  input.appendChild(genBtn);
+  // 가로 배치 시 좌측 "결과 생성"과 우측 "복사하기" 버튼의 높이(바닥선)를 맞춤
+  input.style.paddingBottom = '17px';
   grid.appendChild(input);
-  grid.appendChild(outputPanel('muscleTextureEval','경근무늬검사 평가 결과'));
+  const outPanel = outputPanel('muscleTextureEval','경근무늬검사 평가 결과');
+  const outTa = outPanel.querySelector('textarea');
+  outTa.style.height = 'auto'; outTa.style.flex = '1'; outTa.style.minHeight = '300px';
+  grid.appendChild(outPanel);
   container.appendChild(grid);
   setOutput('muscleTextureEval', '(측정값 입력 후 "결과 생성"을 눌러주세요)');
 }
