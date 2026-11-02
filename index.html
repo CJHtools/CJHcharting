@@ -50,6 +50,9 @@ header p { font-size: 13px; opacity: 0.9; }
 .text-input { width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 12.5px; margin-bottom: 10px; }
 .inline-row { display: flex; gap: 8px; margin-bottom: 10px; }
 .inline-row .text-input { margin-bottom: 0; }
+
+.date-full-click{position:relative;cursor:pointer;}
+.date-full-click::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -766,6 +769,10 @@ const REFERENCE_NOTES = {
 /* 도구 자체의 기능/코드 변경 이력 (유의사항=임상·청구 정책 메모와는 별개). 최신순.
    과거 항목(2026-09-15 이전)은 GitHub 커밋 날짜 기준으로 소급 정리한 것으로, 세부 커밋 단위까지는 대략적으로 묶은 것임 */
 const RELEASE_NOTES = [
+  { d: "2026-11-02", items: [
+    "경근무늬검사 \"결과 평가기\": 우측 상단에 \"전체 초기화\" 버튼 추가, \"첫 평가/재평가\" 배지 제거, 1차·2차 검사 결과 칸에 각각 \"비우기\" 버튼 추가",
+    "경근무늬검사 \"결과 평가기\": 검사 날짜 입력칸을 어디를 눌러도 달력이 열리도록 개선, \"결과 생성\" 버튼을 전폭의 큰 버튼으로 변경",
+  ] },
   { d: "2026-10-28", items: [
     "8주 소견 문장 개선: 한 문장에 여러 내용이 이어져 비문이 되던 문제를 해결하기 위해 \"기왕력·영상소견\" / \"치료 경과\" / \"결론\" 3문장으로 분리",
   ] },
@@ -1339,48 +1346,65 @@ function renderMuscleTextureEvaluator(container){
   const input = el('div','input-panel');
 
   const titleRow = el('div');
-  titleRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;';
-  titleRow.appendChild(el('div','section-title','■ 측정값 입력'));
-  const badge = el('span','', state.moire.in2.trim() ? '재평가 (전후 비교)' : '첫 평가');
-  badge.style.cssText = 'font-size:13px;padding:3px 10px;border-radius:12px;font-weight:bold;'
-    + (state.moire.in2.trim() ? 'background:#fdebd0;color:#b9770e;' : 'background:#eaf2f8;color:#2980b9;');
-  titleRow.appendChild(badge);
+  titleRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;';
+  const titleLeft = el('div');
+  titleLeft.style.cssText = 'display:flex;align-items:center;gap:8px;';
+  titleLeft.appendChild(el('div','section-title','■ 측정값 입력'));
+  titleRow.appendChild(titleLeft);
+
+  // 전체 초기화 버튼 (붉은색, 크게)
+  const resetBtn = el('button', null, '전체 초기화');
+  resetBtn.type = 'button';
+  resetBtn.style.cssText = 'flex-shrink:0;background:#fdecea;color:#c0392b;border:1px solid #e6a8a1;border-radius:6px;padding:4px 12px;font-size:12.5px;font-weight:600;cursor:pointer;';
+  resetBtn.onclick = ()=>{
+    state.moire = { examDate: "", in1: "", in2: "" };
+    container.innerHTML = '';
+    renderers.muscleTexture(container);
+  };
+  titleRow.appendChild(resetBtn);
   input.appendChild(titleRow);
 
   input.appendChild(el('div','desc-line','* 검사 날짜(첫 평가 시 4주 뒤 재촬영일 계산용), 1차 검사 결과, (재평가 시) 2차 검사 결과를 입력 후 "결과 생성"을 누르세요.'));
 
-  const dateLabel = el('div'); dateLabel.style.cssText='font-weight:bold;color:#2980b9;margin:8px 0 4px;font-size:13px;';
-  dateLabel.textContent = '검사 날짜';
-  input.appendChild(dateLabel);
+  function labelRow(text, clearFn){
+    const row = el('div');
+    row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:8px;margin:8px 0 4px;';
+    const lb = el('div'); lb.style.cssText='font-weight:bold;color:#2980b9;font-size:13px;';
+    lb.textContent = text;
+    row.appendChild(lb);
+    if(clearFn){
+      const cb = el('button', null, '비우기');
+      cb.type = 'button';
+      cb.style.cssText = 'flex-shrink:0;background:#fdecea;color:#c0392b;border:1px solid #e6a8a1;border-radius:6px;padding:4px 12px;font-size:12.5px;font-weight:600;cursor:pointer;';
+      cb.onclick = clearFn;
+      row.appendChild(cb);
+    }
+    return row;
+  }
+
+  input.appendChild(labelRow('검사 날짜'));
   const dateInput = el('input','text-input'); dateInput.type='date'; dateInput.value = state.moire.examDate;
+  dateInput.classList.add('date-full-click');
   dateInput.oninput = (e)=>{ state.moire.examDate = e.target.value; };
+  // 입력칸 어디를 눌러도 달력이 열리도록 (CSS로 달력 아이콘이 칸 전체를 덮음 + showPicker 보조)
+  dateInput.addEventListener('click', ()=>{ try{ if(dateInput.showPicker) dateInput.showPicker(); }catch(err){} });
   input.appendChild(dateInput);
 
-  const in1Label = el('div'); in1Label.style.cssText='font-weight:bold;color:#2980b9;margin:8px 0 4px;font-size:13px;';
-  in1Label.textContent = '1차 검사 결과 (재평가 시 1차 차트 내용을 통째로 붙여넣어도 됨)';
-  input.appendChild(in1Label);
   const in1 = el('textarea','text-input'); in1.style.height='140px'; in1.placeholder='어깨 : -2.9 / 골반 : 1.5\n좌측 등고선 개수 : 3개\n어깨 좌우측 길이 비율 : 1:1.11';
   in1.value = state.moire.in1;
   in1.oninput = (e)=>{ state.moire.in1 = e.target.value; };
+  input.appendChild(labelRow('1차 검사 결과 (재평가 시 1차 차트 내용을 통째로 붙여넣어도 됨)', ()=>{ in1.value=''; state.moire.in1=''; in1.focus(); }));
   input.appendChild(in1);
 
-  const in2Label = el('div'); in2Label.style.cssText='font-weight:bold;color:#2980b9;margin:8px 0 4px;font-size:13px;';
-  in2Label.textContent = '2차 검사 결과 (비워두면 첫 평가, 입력하면 전후 비교)';
-  input.appendChild(in2Label);
   const in2 = el('textarea','text-input'); in2.style.height='140px'; in2.placeholder='재평가 시에만 입력';
   in2.value = state.moire.in2;
-  in2.oninput = (e)=>{
-    state.moire.in2 = e.target.value;
-    const cmp = e.target.value.trim() !== '';
-    badge.textContent = cmp ? '재평가 (전후 비교)' : '첫 평가';
-    badge.style.cssText = 'font-size:13px;padding:3px 10px;border-radius:12px;font-weight:bold;'
-      + (cmp ? 'background:#fdebd0;color:#b9770e;' : 'background:#eaf2f8;color:#2980b9;');
-  };
+  in2.oninput = (e)=>{ state.moire.in2 = e.target.value; };
+  input.appendChild(labelRow('2차 검사 결과 (비워두면 첫 평가, 입력하면 전후 비교)', ()=>{ in2.value=''; state.moire.in2=''; in2.focus(); }));
   input.appendChild(in2);
 
   const noteDiv = el('div'); noteDiv.id = 'moireNote'; noteDiv.style.cssText='font-size:12px;color:#7f8c8d;margin-top:8px;min-height:16px;';
   const genBtn = el('button','btn-copy','결과 생성');
-  genBtn.style.background = '#3498db';
+  genBtn.style.cssText = 'background:#3498db;width:100%;margin-top:12px;';
   genBtn.onclick = ()=>{
     const isCmp = state.moire.in2.trim() !== '';
     if(!isCmp && !state.moire.examDate){ alert('검사 날짜를 선택해 주세요.'); return; }
