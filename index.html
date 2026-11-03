@@ -769,6 +769,9 @@ const REFERENCE_NOTES = {
 /* 도구 자체의 기능/코드 변경 이력 (유의사항=임상·청구 정책 메모와는 별개). 최신순.
    과거 항목(2026-09-15 이전)은 GitHub 커밋 날짜 기준으로 소급 정리한 것으로, 세부 커밋 단위까지는 대략적으로 묶은 것임 */
 const RELEASE_NOTES = [
+  { d: "2026-11-03", items: [
+    "자보 차팅에 \"심사용 진단서\" 팝업 신설(\"8주 소견\" 옆) — 8주 초과심사 제출용 고정 문구(추가 치료 소견·제출용 문구·기왕 증상 관련 문구)를 문장별 복사 버튼으로 바로 복사. 8주+1일 날짜와 추가 치료 기간(2~6주, 기본 4주), 질환(추간판 탈출증/척추협착/둘 다) 선택 가능",
+  ] },
   { d: "2026-11-02", items: [
     "경근무늬검사 \"결과 평가기\": 우측 상단에 \"전체 초기화\" 버튼 추가, \"첫 평가/재평가\" 배지 제거, 1차·2차 검사 결과 칸에 각각 \"비우기\" 버튼 추가",
     "경근무늬검사 \"결과 평가기\": 검사 날짜 입력칸을 어디를 눌러도 달력이 열리도록 개선, \"결과 생성\" 버튼을 전폭의 큰 버튼으로 변경",
@@ -987,6 +990,12 @@ renderers.jabo = function(container){
   ewOpenBtn.style.cssText = 'cursor:pointer;background:#fdecea;color:#c0392b;border:1px solid #c0392b;padding:4px 12px;border-radius:12px;font-size:13.5px;font-weight:600;line-height:1.3;text-align:center;white-space:normal;';
   ewOpenBtn.onclick = ()=>{ state.eightWeekModalOpen = true; renderers.jabo(container); };
   ewCol.appendChild(ewOpenBtn);
+  const rvOpenBtn = el('button');
+  rvOpenBtn.type = 'button';
+  rvOpenBtn.innerHTML = '심사용<br>진단서';
+  rvOpenBtn.style.cssText = 'cursor:pointer;background:#fdecea;color:#c0392b;border:1px solid #c0392b;padding:4px 12px;border-radius:12px;font-size:13.5px;font-weight:600;line-height:1.3;text-align:center;white-space:normal;margin-left:8px;';
+  rvOpenBtn.onclick = ()=>{ renderReviewCertModal(); };
+  ewCol.appendChild(rvOpenBtn);
   compactRow.appendChild(ewCol);
 
   input.appendChild(compactRow);
@@ -1275,6 +1284,155 @@ function renderEightWeekModal(container){
   overlay.appendChild(box);
   document.body.appendChild(overlay);
   refreshPreview();
+}
+
+
+/* =========================================================
+   심사용 진단서 모달 (8주 초과심사 제출용 고정 문구 복사)
+   - 글상자 없이 "문장 + 복사 버튼" 행 구성, 복사해도 닫히지 않음
+   ========================================================= */
+const REVIEW_CERT_DX = [
+  {id:'disc', label:'추간판 탈출증', text:'추간판 탈출증'},
+  {id:'stenosis', label:'척추협착', text:'척추협착'},
+  {id:'both', label:'둘 다', text:'추간판 탈출증/척추협착'},
+];
+function reviewCertBlankState(){ return {date:'', weeks:4, dx:'disc'}; }
+function reviewCertFormatDate(v){
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || '');
+  return m ? (m[1] + '년 ' + parseInt(m[2],10) + '월 ' + parseInt(m[3],10) + '일') : '[날짜 기입]';
+}
+function reviewCertTexts(st){
+  const dx = REVIEW_CERT_DX.find(d=>d.id===st.dx).text;
+  return {
+    main: '상기 환자는 상기 수상일에 TA로 인한 상기 병명으로 본원에 통원 치료 중입니다.\n'
+        + '환자의 신체 상태와 일상 활동 및 치료 주기 등을 고려하였을 때,\n'
+        + '8주 지불 보증이 종료되는 다음날(' + reviewCertFormatDate(st.date) + ')로부터 ' + st.weeks + '주간의 추가적인 치료를 요합니다.\n'
+        + '이후 환자의 회복상태에 따라 추가적인 치료를 필요로 할 수 있습니다.',
+    submit: '[자동차손해배상보장법시행령]제11조의2에 따른 경상환자 장기치료 타당성검토(8주초과심사)제출용',
+    pre: dx + '은 기존에 증상이 있었으며 사고 이후 증상 악화된 것으로 사료됩니다.',
+    asym: '사고 이전 무증상성 ' + dx + '이 있었으며 사고 이후 증상 악화된 것으로 사료됩니다.',
+  };
+}
+function reviewCertCopy(text, btn){
+  const done = ()=>{
+    showToast();
+    if(btn){
+      const orig = btn.textContent;
+      btn.textContent = '복사됨 ✓';
+      btn.dataset.copied = '1';
+      setTimeout(()=>{ btn.textContent = orig; delete btn.dataset.copied; }, 1200);
+    }
+  };
+  const fallback = ()=>{
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.cssText = 'position:fixed;left:-9999px;top:0;';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    ta.remove(); done();
+  };
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+    else fallback();
+  }catch(e){ fallback(); }
+}
+function renderReviewCertModal(){
+  const st = reviewCertBlankState();
+  const overlay = el('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;';
+  const close = ()=> overlay.remove();
+  overlay.onclick = (e)=>{ if(e.target === overlay) close(); };
+
+  const box = el('div');
+  box.style.cssText = 'background:#fff;border-radius:14px;max-width:760px;width:100%;max-height:90vh;overflow-y:auto;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,0.3);';
+
+  const textEls = {};
+  function refreshTexts(){
+    const t = reviewCertTexts(st);
+    Object.keys(textEls).forEach(k=>{ textEls[k].textContent = t[k]; });
+  }
+
+  function copyRow(key, title){
+    const row = el('div');
+    row.style.cssText = 'display:flex;gap:12px;align-items:stretch;margin:6px 0 14px;';
+    const txt = el('div');
+    txt.style.cssText = 'flex:1;min-width:0;background:#fafafa;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:13.5px;line-height:1.6;white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere;';
+    textEls[key] = txt;
+    row.appendChild(txt);
+    const cb = el('button', null, '복사');
+    cb.type = 'button';
+    cb.style.cssText = 'flex:0 0 76px;cursor:pointer;background:#fdecea;color:#c0392b;border:1px solid #c0392b;border-radius:8px;font-size:13.5px;font-weight:700;';
+    cb.onclick = ()=> reviewCertCopy(reviewCertTexts(st)[key], cb);
+    row.appendChild(cb);
+    return row;
+  }
+
+  function build(){
+    const scroll = box.scrollTop;
+    box.innerHTML = '';
+    Object.keys(textEls).forEach(k=> delete textEls[k]);
+
+    const head = el('div');
+    head.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;';
+    head.appendChild(el('div','section-title','■ 심사용 진단서 (8주 초과심사 제출용)'));
+    const closeBtn = el('button', null, '✕');
+    closeBtn.type = 'button';
+    closeBtn.style.cssText = 'cursor:pointer;background:none;border:none;font-size:18px;color:var(--text-muted);line-height:1;';
+    closeBtn.onclick = close;
+    head.appendChild(closeBtn);
+    box.appendChild(head);
+    box.appendChild(el('div','desc-line','* 각 문장 오른쪽 "복사"를 누르면 바로 복사됩니다(팝업은 닫히지 않음). 닫으면 선택값은 초기화됩니다.'));
+
+    // ① 소견문
+    box.appendChild(el('div','section-title','① 추가 치료 필요 소견'));
+    const opt = el('div');
+    opt.style.cssText = 'display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center;margin:6px 0 8px;';
+    const dWrap = el('div'); dWrap.style.cssText = 'display:flex;align-items:center;gap:8px;';
+    const dl = el('span', null, '8주+1일 날짜'); dl.style.cssText = 'font-weight:bold;color:#2980b9;font-size:13px;';
+    dWrap.appendChild(dl);
+    const di = el('input','text-input'); di.type = 'date'; di.value = st.date;
+    di.classList.add('date-full-click'); di.style.width = '170px';
+    di.oninput = (e)=>{ st.date = e.target.value; refreshTexts(); };
+    di.addEventListener('click', ()=>{ try{ if(di.showPicker) di.showPicker(); }catch(err){} });
+    dWrap.appendChild(di);
+    opt.appendChild(dWrap);
+    const wWrap = el('div'); wWrap.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;';
+    const wl = el('span', null, '추가 치료 기간'); wl.style.cssText = 'font-weight:bold;color:#2980b9;font-size:13px;';
+    wWrap.appendChild(wl);
+    const wg = el('div','tag-group');
+    [2,3,4,5,6].forEach(n=> wg.appendChild(tagBtn(n+'주', st.weeks===n, ()=>{ st.weeks = n; build(); })));
+    wWrap.appendChild(wg);
+    opt.appendChild(wWrap);
+    box.appendChild(opt);
+    box.appendChild(el('div','desc-line','* 날짜를 선택하지 않고 복사하면 "[날짜 기입]"이 그대로 들어갑니다.'));
+    box.appendChild(copyRow('main'));
+
+    // ② 제출용 문구
+    box.appendChild(el('div','section-title','② 제출용 문구'));
+    box.appendChild(copyRow('submit'));
+
+    // ③ 기왕 증상 문구
+    box.appendChild(el('div','section-title','③ 기왕 증상 관련 문구 (해당되는 것을 복사)'));
+    const dxWrap = el('div'); dxWrap.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 8px;';
+    const xl = el('span', null, '질환'); xl.style.cssText = 'font-weight:bold;color:#2980b9;font-size:13px;';
+    dxWrap.appendChild(xl);
+    const xg = el('div','tag-group');
+    REVIEW_CERT_DX.forEach(d=> xg.appendChild(tagBtn(d.label, st.dx===d.id, ()=>{ st.dx = d.id; build(); })));
+    dxWrap.appendChild(xg);
+    box.appendChild(dxWrap);
+    const l1 = el('div', null, '기존에 증상이 있었던 경우'); l1.style.cssText = 'font-size:12px;color:#64748b;margin-top:4px;';
+    box.appendChild(l1);
+    box.appendChild(copyRow('pre'));
+    const l2 = el('div', null, '사고 이전 무증상이었던 경우'); l2.style.cssText = 'font-size:12px;color:#64748b;margin-top:4px;';
+    box.appendChild(l2);
+    box.appendChild(copyRow('asym'));
+
+    refreshTexts();
+    box.scrollTop = scroll;
+  }
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  build();
 }
 
 
