@@ -80,7 +80,7 @@ header p { font-size: 13px; opacity: 0.9; }
 </header>
 <div class="tab-container" id="tabBar"></div>
 <div class="main-content" id="mainContent"></div>
-<div id="feedbackFooter" style="display:flex;align-items:center;justify-content:center;gap:5px;text-align:center;font-size:11.5px;color:#94a3b8;padding:14px 12px 22px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>건의사항·오류 제보는 이상민 원장에게 메시지 주세요.</span></div>
+<div id="feedbackFooter" style="display:flex;align-items:center;justify-content:center;gap:5px;text-align:center;font-size:11.5px;color:#c0392b;padding:14px 12px 22px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>건의사항·오류 제보는 이상민 원장에게 메시지 주세요.</span></div>
 </div>
 <div id="toast" class="toast">클립보드에 차팅 문구가 복사되었습니다.</div>
 
@@ -769,6 +769,18 @@ const REFERENCE_NOTES = {
 /* 도구 자체의 기능/코드 변경 이력 (유의사항=임상·청구 정책 메모와는 별개). 최신순.
    과거 항목(2026-09-15 이전)은 GitHub 커밋 날짜 기준으로 소급 정리한 것으로, 세부 커밋 단위까지는 대략적으로 묶은 것임 */
 const RELEASE_NOTES = [
+  { d: "2026-11-17", items: [
+    "8주 소견 \"재평가 결과\": 치료 공백 입력 항목 삭제",
+    "8주 소견 문장 점검: 진찰·검사 문구를 항목별 서술어로 교정(\"ROM은 호전\" → \"ROM 제한은 호전됨\" 등), 통증 양상·제한 동작·잔존 문제·치료 경과 ROM 문구의 비문 정리",
+    "건의사항·오류 제보 안내 문구를 붉은 계열로 변경(페이지 하단·업데이트 내역 제목줄)",
+    "심사용 진단서: 초진 NRS 선택(5~9, 미선택 시 6) 추가 — NRS 문구와 호전/확인 판단 기준에 반영",
+    "8주 소견 \"치료 경과\": 초진 NRS 선택(5~9, 미선택 시 기본 6) 추가 — 경과 문장과 재평가 결과 문장에 반영",
+    "8주 소견: 접이식 \"재평가 결과(선택)\" 추가 — 경과(사고일·초진일·재평가일[미입력 시 오늘]·치료 공백), 통증·기능(평가 조건·양상·제한 동작), 진찰·검사(실제 시행 항목과 호전/변화 없음/잔존), 판단(사고 관련성·잔존 문제), 계획(목적·재평가 시점, 방법·변경/종결 기준은 고정 문구). 선택한 항목만 기존 소견 뒤에 \"[재평가 결과]\"으로 덧붙고, 선택하지 않으면 기존 그대로",
+    "심사용 진단서: 문구를 자배원 양식에 맞춰 개정 — \"사고 이후 8주 초과일인 ○월 ○일부터 종료 예정일까지 약 N주\" 형태로 종료 예정일을 함께 표기, 끝에 \"재평가로 기간 조정 가능 / 미발견증·합병증 병발 시 추가 진단\" 두 문장 추가, 치료 계획은 \"한방 보존적 치료\" 고정 문구",
+    "심사용 진단서: 수상일만 입력하면 8주 초과일(수상일+57일)과 종료 예정일이 자동 계산됨(8주 초과일은 직접 수정 가능)",
+    "심사용 진단서: 기왕 증상 관련 문구의 어미를 \"사료됨\"으로 통일, 잔존 부위 직접 입력칸(팔꿈치·손목 등) 추가",
+    "심사용 진단서: 현재 NRS·잔존 부위·잔존 소견 선택 시 환자별 문장으로 반영(미선택 시 기존 고정 문구), 발급 전 확인 안내 추가",
+  ] },
   { d: "2026-11-03", items: [
     "자보 차팅에 \"심사용 진단서\" 팝업 신설(\"8주 소견\" 옆) — 8주 초과심사 제출용 고정 문구(추가 치료 소견·제출용 문구·기왕 증상 관련 문구)를 문장별 복사 버튼으로 바로 복사. 8주+1일 날짜와 추가 치료 기간(2~6주, 기본 4주), 질환(추간판 탈출증/척추협착/둘 다) 선택 가능",
   ] },
@@ -825,7 +837,7 @@ function renderReleaseNotesModal(){
   head.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;';
   head.appendChild(el('div','section-title','업데이트 내역'));
   const fb = el('div');
-  fb.style.cssText = 'display:flex;align-items:center;gap:5px;margin-left:auto;margin-right:12px;font-size:11.5px;color:#64748b;text-align:right;';
+  fb.style.cssText = 'display:flex;align-items:center;gap:5px;margin-left:auto;margin-right:12px;font-size:11.5px;color:#c0392b;text-align:right;';
   fb.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>건의사항·오류 제보는 이상민 원장에게 메시지 주세요.</span>';
   head.appendChild(fb);
   const closeBtn = el('button', null, '✕');
@@ -1081,25 +1093,93 @@ function eightWeekRegions(ew){
   return ew.course.regions === null ? eightWeekDerivedRegions(ew) : ew.course.regions;
 }
 
+function ewInitNrs(ew){ return ew.course.initNrs || 6; }
 function buildEightWeekCourse(ew){
   const c = ew.course;
   const nrs = (c.nrs || '').trim();
   if(!nrs) return '';   // 현재 NRS 입력이 있어야만 경과 문장 생성 (사실 기재 원칙)
   const t = EIGHT_WEEK_COURSE_TYPES.find(x=>x.id===c.type);
   const typePhrase = t ? t.phrase : '통증이 지속되는 상태';
-  let s = '초진 시 NRS 6에서 치료에도 현재 NRS ' + nrs + '로 ' + typePhrase;
+  let s = '초진 시 NRS ' + ewInitNrs(ew) + '에서 치료에도 현재 NRS ' + nrs + '로 ' + typePhrase;
   const rom = EIGHT_WEEK_ROM_OPTIONS.find(x=>x.id===c.rom);
   if(rom){
     const regs = eightWeekRegions(ew);
     const r = (regs.length ? regs.map(x=>x.replace(/부$/,'')).join('·') : '해당') + ' 부위';
     let romPhrase;
-    if(rom.pct) romPhrase = r + ' ROM도 초진 대비 약 ' + rom.pct + '% 호전에 그침';
+    if(rom.pct) romPhrase = r + ' ROM 제한도 초진 대비 약 ' + rom.pct + '% 호전되는 데 그침';
     else if(rom.id==='limit') romPhrase = r + ' ROM 제한이 지속됨';
-    else if(rom.id==='slight') romPhrase = r + ' ROM도 경미한 호전에 그침';
-    else romPhrase = r + ' ROM도 호전이 정체됨';
+    else if(rom.id==='slight') romPhrase = r + ' ROM 제한도 경미하게 호전되는 데 그침';
+    else romPhrase = r + ' ROM 제한의 호전도 정체됨';
     return s + '이며, ' + romPhrase + '.';
   }
   return s + '임.';
+}
+
+/* ---- 8주 소견: 재평가 결과(선택) — 자배원 "진료기록에 남길 재평가 요약" 항목(경과/통증·기능/진찰·검사/판단/계획) ---- */
+const EW_COND = ['안정 시','활동 시'];
+const EW_QUALITY = ['뻐근한 통증','쑤시는 통증','당기는 통증','방사통·저림','움직일 때 악화'];
+const EW_LIMITS = ['장시간 앉기','장시간 서기','보행','허리 굽히기','목 돌리기','물건 들기','상지 거상','수면 중 체위 변경','운전'];
+const EW_EXAMS = [
+  {id:'tender', label:'압통', noun:'압통은'}, {id:'rom', label:'ROM', noun:'ROM 제한은'}, {id:'power', label:'근력', noun:'근력 저하는'},
+  {id:'sense', label:'감각', noun:'감각 이상은'}, {id:'reflex', label:'반사', noun:'반사 이상은'}, {id:'provoke', label:'유발검사', noun:'유발검사 양성 소견은'},
+];
+const EW_EXAM_RESULT = { better:'호전됨', same:'변화 없음', resid:'잔존함' };
+const EW_RESID = ['통증','ROM 제한','일상동작 제한'];
+const EW_GOALS = ['통증 감소','기능 회복','일상·직무 복귀','재발 방지'];
+const EW_RECHECK = ['2주 후','4주 후'];
+function ewToday(){
+  const d = new Date(), pad = n=>String(n).padStart(2,'0');
+  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+}
+function buildEightWeekSummary(ew, hasMain){
+  const sm = ew.summary;
+  const ord = (list, picked)=> list.filter(x=>picked.includes(x));
+  const sents = [];
+  // 경과 (재평가일은 비워 두면 오늘 날짜로 자동 입력)
+  if(sm.acc || sm.first || sm.re){
+    const parts = [];
+    if(sm.acc) parts.push('사고일 ' + sm.acc);
+    if(sm.first) parts.push('초진일 ' + sm.first);
+    parts.push('재평가일 ' + (sm.re || ewToday()));
+    sents.push(parts.join(', ') + ' 기준으로 경과를 평가함.');
+  }
+  // 통증·기능 (NRS 변화는 본문 경과 문장에 이미 있으므로 본문이 없을 때만 여기서 서술)
+  const limits = ord(EW_LIMITS, sm.limits).concat(sm.limitEtc.trim() ? [sm.limitEtc.trim()] : []);
+  const nrs = (ew.course.nrs || '').trim();
+  if(!hasMain && nrs && (sm.cond || sm.quality.length || limits.length)){
+    sents.push('초진 시 NRS ' + ewInitNrs(ew) + '에서 현재 NRS ' + nrs + '로 확인됨.');
+  }
+  if(sm.cond) sents.push('통증은 ' + sm.cond + ' 기준으로 평가함.');
+  if(sm.quality.length){
+    const q = ord(EW_QUALITY, sm.quality);
+    const kinds = q.filter(x=>/통증$/.test(x) && x!=='방사통·저림');
+    const cl = [];   // [중간형, 종결형]
+    if(kinds.length) cl.push([kinds.join(', ') + '이 있고', kinds.join(', ') + '이 있음']);
+    if(q.includes('방사통·저림')) cl.push(['방사통·저림이 동반되며', '방사통·저림이 동반됨']);
+    if(q.includes('움직일 때 악화')) cl.push(['움직일 때 악화되며', '움직일 때 악화됨']);
+    sents.push(cl.map((c,i)=> i===cl.length-1 ? c[1] : c[0]).join(' ').replace(/^/, '통증 양상: ') + '.');
+  }
+  if(limits.length) sents.push('일상 동작 중 ' + limits.join(', ') + '에 제한이 있음.');
+  // 진찰·검사 (실제 시행한 항목만)
+  const exams = EW_EXAMS.filter(e=>sm.exams[e.id]).map(e=>e.noun + ' ' + EW_EXAM_RESULT[sm.exams[e.id]]);
+  if(exams.length) sents.push('진찰 상 ' + exams.join(', ') + '.');
+  // 판단
+  const rl = ord(EW_RESID, sm.resid);
+  const residTxt = rl.length > 1 ? rl.slice(0,-1).join(', ') + ' 및 ' + rl[rl.length-1] : (rl[0] || '');
+  if(sm.rel && rl.length) sents.push('사고 관련성이 있으며, ' + residTxt + '이 잔존하는 것으로 판단됨.');
+  else if(sm.rel) sents.push('사고 관련성이 있는 것으로 판단됨.');
+  else if(rl.length) sents.push(residTxt + '이 잔존하는 것으로 판단됨.');
+  // 계획 (방법·변경/종결 기준은 고정 문구)
+  if(sm.goals.length || sm.recheck){
+    const head = sm.goals.length
+      ? '추가 치료의 목적은 ' + ord(EW_GOALS, sm.goals).join('·') + '이며, 한방 보존적 치료를 시행하고 '
+      : '한방 보존적 치료를 시행하고 ';
+    const tail = sm.recheck
+      ? sm.recheck + ' 재평가하여 치료의 지속·변경·종결 여부를 판단할 예정임.'
+      : '재평가 결과에 따라 치료의 지속·변경·종결 여부를 판단할 예정임.';
+    sents.push(head + tail);
+  }
+  return sents.join(' ');
 }
 
 function buildEightWeekSentence(ew){
@@ -1119,7 +1199,11 @@ function buildEightWeekSentence(ew){
   if(chronicPlain.length) leadParts.push(chronicPlain.join(', ') + ' 기왕력');
   chronicSurg.forEach(l=> leadParts.push(l + ' 수술 기왕력'));
 
-  if(!idParts.length && !leadParts.length && !imagingList.length) return '(항목을 1개 이상 선택해주세요)';
+  const hasMain = !!(idParts.length || leadParts.length || imagingList.length);
+  const summaryText = buildEightWeekSummary(ew, hasMain);
+  if(!hasMain){
+    return summaryText ? ('[재평가 결과]\n' + summaryText) : '(항목을 1개 이상 선택해주세요)';
+  }
 
   let sentence = '상기 환자는 ';
   const clauses = [];
@@ -1130,7 +1214,7 @@ function buildEightWeekSentence(ew){
   const course = buildEightWeekCourse(ew);
   if(course) sentence += ' ' + course;
   sentence += ' 이에 8주 초과시에도 지속적인 치료가 필요할 것으로 사료됨.';
-  return '[장기치료가 필요한 사유]\n' + sentence;
+  return '[장기치료가 필요한 사유]\n' + sentence + (summaryText ? '\n[재평가 결과]\n' + summaryText : '');
 }
 
 function eightWeekBlankState(){
@@ -1140,7 +1224,8 @@ function eightWeekBlankState(){
     surgery:{cervicalDisc:false,lumbarDisc:false,stenosis:false,rotatorCuff:false,frozenShoulder:false,kneeOA:false},
     disabled:{checked:false,text:""},
     imaging:{cervicalDisc:false,lumbarDisc:false,stenosis:false,rotatorCuff:false,kneeOA:false,etc:false,etcText:""},
-    course:{nrs:"", type:null, regions:null, rom:null}
+    course:{nrs:"", initNrs:null, type:null, regions:null, rom:null},
+    summary:{ open:false, acc:"", first:"", re:"", cond:null, quality:[], limits:[], limitEtc:"", exams:{}, rel:false, resid:[], goals:[], recheck:null }
   };
 }
 
@@ -1229,7 +1314,13 @@ function renderEightWeekModal(container){
     input.appendChild(imagingEtcInput);
   }
 
-  input.appendChild(el('div','section-title','치료 경과 (초진 NRS 6 기준)'));
+  input.appendChild(el('div','section-title','치료 경과'));
+  input.appendChild(el('div','desc-line','초진 NRS (미선택 시 6)'));
+  const initGrp = el('div','tag-group');
+  [5,6,7,8,9].forEach(n=>{
+    initGrp.appendChild(tagBtn(String(n), ew.course.initNrs===n, ()=>{ ew.course.initNrs = (ew.course.initNrs===n ? null : n); rerenderModal(); }));
+  });
+  input.appendChild(initGrp);
   input.appendChild(el('div','desc-line','* 현재 NRS를 입력해야 경과 문장이 생성됩니다. 실제 경과와 다르면 선택하지 마세요.'));
   const nrsInput = el('input','text-input');
   nrsInput.type='text'; nrsInput.inputMode='numeric'; nrsInput.placeholder='현재 NRS (0~10)'; nrsInput.value = ew.course.nrs;
@@ -1262,6 +1353,75 @@ function renderEightWeekModal(container){
   });
   input.appendChild(romGrp);
   input.appendChild(el('div','desc-line','* 부위는 기저질환/영상소견에서 자동 추정되며 직접 바꿀 수 있습니다. %는 초진 대비 의료진이 판단한 호전 정도를 선택하세요.'));
+
+  // ---------- 재평가 결과 (선택, 붉은 상자) ----------
+  const sm = ew.summary;
+  const det = el('details');
+  det.open = !!sm.open;
+  det.style.cssText = 'margin-top:16px;border:2px solid #c0392b;border-radius:10px;padding:8px 12px 12px;background:#fff7f6;';
+  det.addEventListener('toggle', ()=>{ sm.open = det.open; });
+  const dsum = el('summary', null, '재평가 결과 (선택 · 선택한 항목은 줄글로 덧붙음)');
+  dsum.style.cssText = 'cursor:pointer;font-weight:700;color:#c0392b;font-size:14.5px;padding:2px 0;';
+  det.appendChild(dsum);
+  function subTitle(t){ const d = el('div', null, t); d.style.cssText = 'font-weight:700;color:#2980b9;font-size:12.5px;margin:12px 0 4px;'; return d; }
+  function multi(arr, v){ const i = arr.indexOf(v); if(i>=0) arr.splice(i,1); else arr.push(v); }
+  function dateRow(label, key, ph){
+    const w = el('div'); w.style.cssText = 'display:flex;align-items:center;gap:8px;margin:4px 0;';
+    const l = el('span', null, label); l.style.cssText = 'width:62px;font-size:12.5px;';
+    w.appendChild(l);
+    const di = el('input','text-input'); di.type = 'date'; di.value = sm[key];
+    di.classList.add('date-full-click'); di.style.cssText += ';width:160px;';
+    di.oninput = (e)=>{ sm[key] = e.target.value; refreshPreview(); };
+    di.addEventListener('click', ()=>{ try{ if(di.showPicker) di.showPicker(); }catch(err){} });
+    w.appendChild(di);
+    if(ph){ const h = el('span', null, ph); h.style.cssText = 'font-size:11.5px;color:#64748b;'; w.appendChild(h); }
+    return w;
+  }
+  det.appendChild(subTitle('경과'));
+  det.appendChild(dateRow('사고일','acc'));
+  det.appendChild(dateRow('초진일','first'));
+  det.appendChild(dateRow('재평가일','re','(비우면 오늘 날짜 자동)'));
+
+  det.appendChild(subTitle('통증·기능 (NRS는 위 "치료 경과"의 현재 NRS를 사용)'));
+  const g1 = el('div','tag-group');
+  EW_COND.forEach(c=> g1.appendChild(tagBtn('평가 조건: '+c, sm.cond===c, ()=>{ sm.cond = (sm.cond===c ? null : c); sm.open = true; rerenderModal(); })));
+  det.appendChild(g1);
+  const g2 = el('div','tag-group');
+  EW_QUALITY.forEach(q=> g2.appendChild(tagBtn(q, sm.quality.includes(q), ()=>{ multi(sm.quality, q); sm.open = true; rerenderModal(); })));
+  det.appendChild(g2);
+  const g3 = el('div','tag-group');
+  EW_LIMITS.forEach(q=> g3.appendChild(tagBtn(q, sm.limits.includes(q), ()=>{ multi(sm.limits, q); sm.open = true; rerenderModal(); })));
+  det.appendChild(g3);
+  const limIn = el('input','text-input'); limIn.type='text'; limIn.placeholder='기타 제한 동작·직무 제한 직접 입력'; limIn.value = sm.limitEtc;
+  limIn.oninput = (e)=>{ sm.limitEtc = e.target.value; refreshPreview(); };
+  det.appendChild(limIn);
+
+  det.appendChild(subTitle('진찰·검사 (실제 시행한 항목만 · 클릭할 때마다 호전 → 변화 없음 → 잔존 → 해제)'));
+  const g4 = el('div','tag-group');
+  EW_EXAMS.forEach(e=>{
+    const v = sm.exams[e.id];
+    g4.appendChild(tagBtn(e.label + (v ? ' · ' + EW_EXAM_RESULT[v] : ''), !!v, ()=>{
+      const next = {undefined:'better', better:'same', same:'resid', resid:undefined}[v];
+      if(next) sm.exams[e.id] = next; else delete sm.exams[e.id];
+      sm.open = true; rerenderModal();
+    }));
+  });
+  det.appendChild(g4);
+
+  det.appendChild(subTitle('판단'));
+  const g5 = el('div','tag-group');
+  g5.appendChild(tagBtn('사고 관련성 있음', sm.rel, ()=>{ sm.rel = !sm.rel; sm.open = true; rerenderModal(); }));
+  EW_RESID.forEach(q=> g5.appendChild(tagBtn('잔존: '+q, sm.resid.includes(q), ()=>{ multi(sm.resid, q); sm.open = true; rerenderModal(); })));
+  det.appendChild(g5);
+
+  det.appendChild(subTitle('계획 (방법: 한방 보존적 치료 · 변경/종결 기준은 고정 문구)'));
+  const g6 = el('div','tag-group');
+  EW_GOALS.forEach(q=> g6.appendChild(tagBtn('목적: '+q, sm.goals.includes(q), ()=>{ multi(sm.goals, q); sm.open = true; rerenderModal(); })));
+  det.appendChild(g6);
+  const g7 = el('div','tag-group');
+  EW_RECHECK.forEach(q=> g7.appendChild(tagBtn('재평가 '+q, sm.recheck===q, ()=>{ sm.recheck = (sm.recheck===q ? null : q); sm.open = true; rerenderModal(); })));
+  det.appendChild(g7);
+  input.appendChild(det);
 
   grid.appendChild(input);
   const preview = outputPanel('eightWeek', '8주 소견');
@@ -1296,21 +1456,65 @@ const REVIEW_CERT_DX = [
   {id:'stenosis', label:'척추협착', text:'척추협착'},
   {id:'both', label:'둘 다', text:'추간판 탈출증/척추협착'},
 ];
-function reviewCertBlankState(){ return {date:'', weeks:4, dx:'disc'}; }
+const REVIEW_CERT_REGIONS = ['경추','요추','어깨','무릎'];
+const REVIEW_CERT_TYPES = [
+  {id:'pain', label:'통증', text:'통증'},
+  {id:'rom', label:'관절가동범위 제한', text:'관절가동범위 제한'},
+  {id:'adl', label:'일상동작 제한', text:'일상동작 제한'},
+];
+function reviewCertBlankState(){ return {accDate:'', overDate:'', weeks:4, nrs:'', initNrs:null, regions:[], regionEtc:'', types:[], dx:'disc'}; }
 function reviewCertFormatDate(v){
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || '');
   return m ? (m[1] + '년 ' + parseInt(m[2],10) + '월 ' + parseInt(m[3],10) + '일') : '[날짜 기입]';
 }
+// 날짜 계산(UTC 기준, 시간대 영향 없음). 수상일+57일 = 사고 이후 8주 초과일(자배원 달력 기준: 사고 다음날부터 기산)
+function reviewCertAddDays(v, days){
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || '');
+  if(!m) return '';
+  const d = new Date(Date.UTC(+m[1], +m[2]-1, +m[3]) + days*86400000);
+  const pad = n => String(n).padStart(2,'0');
+  return d.getUTCFullYear() + '-' + pad(d.getUTCMonth()+1) + '-' + pad(d.getUTCDate());
+}
+function reviewCertEndDate(st){ return st.overDate ? reviewCertAddDays(st.overDate, 7*st.weeks - 1) : ''; }
 function reviewCertTexts(st){
   const dx = REVIEW_CERT_DX.find(d=>d.id===st.dx).text;
+  const base = '상기 환자는 상기 발생연월일에 교통사고로 인하여 상기 상병으로 본원에 내원하여 치료를 받고 있는 환자로서,';
+  const plan = '한방 보존적 치료가 추가로 필요하다고 판단됨.';
+  const nrsStr = String(st.nrs).trim();
+  const nrsNum = nrsStr === '' ? NaN : Number(nrsStr);
+  const hasNrs = !isNaN(nrsNum) && nrsNum >= 0 && nrsNum <= 10;
+  const regions = REVIEW_CERT_REGIONS.filter(r=>st.regions.includes(r))
+    .concat(String(st.regionEtc||'').split(/[,·\/、，]+/).map(x=>x.trim()).filter(Boolean));
+  const types = REVIEW_CERT_TYPES.filter(t=>st.types.includes(t.id)).map(t=>t.text);
+  const clauses = [];
+  if(hasNrs){
+    const init = st.initNrs || 6;
+    clauses.push(nrsNum < init
+      ? '초진 시 NRS ' + init + '에서 현재 NRS ' + nrsStr + '로 호전되었으나'
+      : '초진 시 NRS ' + init + ', 현재 NRS ' + nrsStr + '로 확인되며');
+  }
+  let residual = '';
+  if(regions.length || types.length){
+    residual = (regions.length ? regions.join('·') + ' 부위의 ' : '') + (types.length ? types.join(', ') : '증상') + '이 남아 있어';
+  } else if(hasNrs){
+    residual = '잔존 증상이 남아 있어';
+  }
+  let line1;
+  if(residual){
+    clauses.push(residual);
+    line1 = base + ' ' + clauses.join(', ') + ' ' + plan;
+  } else {
+    // 증상 관련 선택이 전혀 없으면 기존 고정 문구
+    line1 = base + ' 환자의 신체 상태와 일상 활동 및 치료 주기 등을 고려하였을 때 ' + plan;
+  }
+  const line2 = '현재 상태와 치료 반응을 고려할 때, 사고 이후 8주 초과일인 ' + reviewCertFormatDate(st.overDate)
+    + '부터 ' + reviewCertFormatDate(reviewCertEndDate(st)) + '까지 약 ' + st.weeks + '주의 추가 치료를 예상함.';
+  const line3 = '향후 회복 상태와 치료 반응을 재평가하여 치료의 지속 여부 및 기간은 조정될 수 있음. 또한 미발견증이나 합병증 병발시 추가 진단을 요함.';
   return {
-    main: '상기 환자는 상기 수상일에 TA로 인한 상기 병명으로 본원에 통원 치료 중입니다.\n'
-        + '환자의 신체 상태와 일상 활동 및 치료 주기 등을 고려하였을 때,\n'
-        + '8주 지불 보증이 종료되는 다음날(' + reviewCertFormatDate(st.date) + ')로부터 ' + st.weeks + '주간의 추가적인 치료를 요합니다.\n'
-        + '이후 환자의 회복상태에 따라 추가적인 치료를 필요로 할 수 있습니다.',
+    main: line1 + '\n' + line2 + '\n' + line3,
     submit: '[자동차손해배상보장법시행령]제11조의2에 따른 경상환자 장기치료 타당성검토(8주초과심사)제출용',
-    pre: dx + '은 기존에 증상이 있었으며 사고 이후 증상 악화된 것으로 사료됩니다.',
-    asym: '사고 이전 무증상성 ' + dx + '이 있었으며 사고 이후 증상 악화된 것으로 사료됩니다.',
+    pre: dx + '은 기존에 증상이 있었으며 사고 이후 증상 악화된 것으로 사료됨.',
+    asym: '사고 이전 무증상성 ' + dx + '이 있었으며 사고 이후 증상 악화된 것으로 사료됨.',
   };
 }
 function reviewCertCopy(text, btn){
@@ -1346,12 +1550,33 @@ function renderReviewCertModal(){
   box.style.cssText = 'background:#fff;border-radius:14px;max-width:760px;width:100%;max-height:90vh;overflow-y:auto;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,0.3);';
 
   const textEls = {};
+  let endEl = null;
   function refreshTexts(){
     const t = reviewCertTexts(st);
     Object.keys(textEls).forEach(k=>{ textEls[k].textContent = t[k]; });
+    if(endEl){
+      const e = reviewCertEndDate(st);
+      endEl.textContent = e ? reviewCertFormatDate(e) : '(8주 초과일 입력 시 자동 계산)';
+    }
   }
 
-  function copyRow(key, title){
+  function labelSpan(text){
+    const l = el('span', null, text);
+    l.style.cssText = 'font-weight:bold;color:#2980b9;font-size:13px;white-space:nowrap;';
+    return l;
+  }
+  function dateField(label, value, onInput){
+    const w = el('div'); w.style.cssText = 'display:flex;align-items:center;gap:8px;';
+    w.appendChild(labelSpan(label));
+    const di = el('input','text-input'); di.type = 'date'; di.value = value;
+    di.classList.add('date-full-click'); di.style.width = '170px';
+    di.oninput = (e)=> onInput(e.target.value, di);
+    di.addEventListener('click', ()=>{ try{ if(di.showPicker) di.showPicker(); }catch(err){} });
+    w.appendChild(di);
+    return {w, di};
+  }
+
+  function copyRow(key){
     const row = el('div');
     row.style.cssText = 'display:flex;gap:12px;align-items:stretch;margin:6px 0 14px;';
     const txt = el('div');
@@ -1365,11 +1590,13 @@ function renderReviewCertModal(){
     row.appendChild(cb);
     return row;
   }
+  function toggle(arr, v){ const i = arr.indexOf(v); if(i>=0) arr.splice(i,1); else arr.push(v); }
 
   function build(){
     const scroll = box.scrollTop;
     box.innerHTML = '';
     Object.keys(textEls).forEach(k=> delete textEls[k]);
+    endEl = null;
 
     const head = el('div');
     head.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;';
@@ -1380,30 +1607,77 @@ function renderReviewCertModal(){
     closeBtn.onclick = close;
     head.appendChild(closeBtn);
     box.appendChild(head);
-    box.appendChild(el('div','desc-line','* 각 문장 오른쪽 "복사"를 누르면 바로 복사됩니다(팝업은 닫히지 않음). 닫으면 선택값은 초기화됩니다.'));
+    box.appendChild(el('div','desc-line','* 각 문장 오른쪽 "복사"를 누르면 바로 복사됩니다(팝업은 닫히지 않음). 닫으면 입력·선택값은 초기화됩니다.'));
 
     // ① 소견문
     box.appendChild(el('div','section-title','① 추가 치료 필요 소견'));
+
+    // 날짜 입력 (수상일 → 8주 초과일 자동, 직접 수정 가능)
+    const dRow = el('div');
+    dRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center;margin:6px 0 8px;';
+    let overInput = null;
+    const f1 = dateField('수상일', st.accDate, (v)=>{
+      st.accDate = v;
+      st.overDate = v ? reviewCertAddDays(v, 57) : '';
+      if(overInput) overInput.value = st.overDate;
+      refreshTexts();
+    });
+    const f2 = dateField('8주 초과일', st.overDate, (v)=>{ st.overDate = v; refreshTexts(); });
+    overInput = f2.di;
+    dRow.appendChild(f1.w); dRow.appendChild(f2.w);
+    box.appendChild(dRow);
+
     const opt = el('div');
-    opt.style.cssText = 'display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center;margin:6px 0 8px;';
-    const dWrap = el('div'); dWrap.style.cssText = 'display:flex;align-items:center;gap:8px;';
-    const dl = el('span', null, '8주+1일 날짜'); dl.style.cssText = 'font-weight:bold;color:#2980b9;font-size:13px;';
-    dWrap.appendChild(dl);
-    const di = el('input','text-input'); di.type = 'date'; di.value = st.date;
-    di.classList.add('date-full-click'); di.style.width = '170px';
-    di.oninput = (e)=>{ st.date = e.target.value; refreshTexts(); };
-    di.addEventListener('click', ()=>{ try{ if(di.showPicker) di.showPicker(); }catch(err){} });
-    dWrap.appendChild(di);
-    opt.appendChild(dWrap);
+    opt.style.cssText = 'display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center;margin:6px 0 8px;';
     const wWrap = el('div'); wWrap.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;';
-    const wl = el('span', null, '추가 치료 기간'); wl.style.cssText = 'font-weight:bold;color:#2980b9;font-size:13px;';
-    wWrap.appendChild(wl);
+    wWrap.appendChild(labelSpan('추가 치료 기간'));
     const wg = el('div','tag-group');
     [2,3,4,5,6].forEach(n=> wg.appendChild(tagBtn(n+'주', st.weeks===n, ()=>{ st.weeks = n; build(); })));
     wWrap.appendChild(wg);
     opt.appendChild(wWrap);
+    const eWrap = el('div'); eWrap.style.cssText = 'display:flex;align-items:center;gap:8px;';
+    eWrap.appendChild(labelSpan('종료 예정일'));
+    endEl = el('span'); endEl.style.cssText = 'font-size:13.5px;font-weight:600;';
+    eWrap.appendChild(endEl);
+    opt.appendChild(eWrap);
     box.appendChild(opt);
-    box.appendChild(el('div','desc-line','* 날짜를 선택하지 않고 복사하면 "[날짜 기입]"이 그대로 들어갑니다.'));
+    box.appendChild(el('div','desc-line','* 수상일을 입력하면 8주 초과일(수상일+57일, 자배원 달력 기준)과 종료 예정일이 자동 계산됩니다. 8주 초과일은 직접 수정할 수 있고, 날짜를 비워 두고 복사하면 "[날짜 기입]"이 남습니다.'));
+
+    // 환자별 내용 (선택하지 않으면 기존 고정 문구)
+    const nWrap = el('div'); nWrap.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 6px;';
+    nWrap.appendChild(labelSpan('초진 NRS'));
+    const ig = el('div','tag-group');
+    [5,6,7,8,9].forEach(n=> ig.appendChild(tagBtn(String(n), st.initNrs===n, ()=>{ st.initNrs = (st.initNrs===n ? null : n); build(); })));
+    nWrap.appendChild(ig);
+    const ih = el('span', null, '(미선택 시 6)'); ih.style.cssText = 'font-size:12px;color:#64748b;margin-right:10px;';
+    nWrap.appendChild(ih);
+    nWrap.appendChild(labelSpan('현재 NRS'));
+    const ni = el('input','text-input'); ni.type = 'number'; ni.min = '0'; ni.max = '10'; ni.step = '0.5';
+    ni.value = st.nrs; ni.style.width = '80px'; ni.placeholder = '0~10';
+    ni.oninput = (e)=>{ st.nrs = e.target.value; refreshTexts(); };
+    nWrap.appendChild(ni);
+    const nh = el('span', null, '(차트에 기록된 값만 입력 · 비우면 생략)'); nh.style.cssText = 'font-size:12px;color:#64748b;';
+    nWrap.appendChild(nh);
+    box.appendChild(nWrap);
+
+    const rWrap = el('div'); rWrap.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0;';
+    rWrap.appendChild(labelSpan('잔존 부위'));
+    const rg = el('div','tag-group');
+    REVIEW_CERT_REGIONS.forEach(r=> rg.appendChild(tagBtn(r, st.regions.includes(r), ()=>{ toggle(st.regions, r); build(); })));
+    rWrap.appendChild(rg);
+    const re = el('input','text-input'); re.type = 'text'; re.value = st.regionEtc;
+    re.placeholder = '기타 부위 직접 입력 (예: 팔꿈치, 손목)'; re.style.cssText = 'width:230px;';
+    re.oninput = (e)=>{ st.regionEtc = e.target.value; refreshTexts(); };
+    rWrap.appendChild(re);
+    box.appendChild(rWrap);
+
+    const tWrap = el('div'); tWrap.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 4px;';
+    tWrap.appendChild(labelSpan('잔존 소견'));
+    const tg = el('div','tag-group');
+    REVIEW_CERT_TYPES.forEach(t=> tg.appendChild(tagBtn(t.label, st.types.includes(t.id), ()=>{ toggle(st.types, t.id); build(); })));
+    tWrap.appendChild(tg);
+    box.appendChild(tWrap);
+    box.appendChild(el('div','desc-line','* NRS·잔존 부위(직접 입력 포함)·잔존 소견을 하나도 선택하지 않으면 기존 고정 문구("환자의 신체 상태와 일상 활동 및 치료 주기 등을 고려하였을 때")로 나옵니다. 세부 수치·증상 묘사는 경과기록지(8주 소견)에 기재하세요.'));
     box.appendChild(copyRow('main'));
 
     // ② 제출용 문구
@@ -1413,8 +1687,7 @@ function renderReviewCertModal(){
     // ③ 기왕 증상 문구
     box.appendChild(el('div','section-title','③ 기왕 증상 관련 문구 (해당되는 것을 복사)'));
     const dxWrap = el('div'); dxWrap.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 8px;';
-    const xl = el('span', null, '질환'); xl.style.cssText = 'font-weight:bold;color:#2980b9;font-size:13px;';
-    dxWrap.appendChild(xl);
+    dxWrap.appendChild(labelSpan('질환'));
     const xg = el('div','tag-group');
     REVIEW_CERT_DX.forEach(d=> xg.appendChild(tagBtn(d.label, st.dx===d.id, ()=>{ st.dx = d.id; build(); })));
     dxWrap.appendChild(xg);
@@ -1426,6 +1699,10 @@ function renderReviewCertModal(){
     box.appendChild(l2);
     box.appendChild(copyRow('asym'));
 
+    const chk = el('div', null, '※ 발급 전 확인: 진단일이 진료기록이 있는 날인지, 진단서의 NRS 등이 진료기록과 일치하는지 확인하세요.');
+    chk.style.cssText = 'font-size:12px;color:#b9770e;background:#fff7ed;border:1px dashed #f0c27b;border-radius:8px;padding:8px 10px;margin-top:6px;';
+    box.appendChild(chk);
+
     refreshTexts();
     box.scrollTop = scroll;
   }
@@ -1434,7 +1711,6 @@ function renderReviewCertModal(){
   document.body.appendChild(overlay);
   build();
 }
-
 
 // 2. 수기요법 (서브: 복잡추나/단순추나/도인운동/근건이완)
 renderers.manualTherapy = function(container){
