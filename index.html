@@ -770,6 +770,8 @@ const REFERENCE_NOTES = {
    과거 항목(2026-09-15 이전)은 GitHub 커밋 날짜 기준으로 소급 정리한 것으로, 세부 커밋 단위까지는 대략적으로 묶은 것임 */
 const RELEASE_NOTES = [
   { d: "2026-11-17", items: [
+    "8주 소견·심사용 진단서 팝업 가로 폭 확대(각각 860px·760px → 1100px)",
+    "8주 소견 \"재평가 결과\" 붉은 상자를 모달 맨 위로 이동(스크롤 없이 바로 보이도록)",
     "8주 소견 \"재평가 결과\": 치료 공백 입력 항목 삭제",
     "8주 소견 문장 점검: 진찰·검사 문구를 항목별 서술어로 교정(\"ROM은 호전\" → \"ROM 제한은 호전됨\" 등), 통증 양상·제한 동작·잔존 문제·치료 경과 ROM 문구의 비문 정리",
     "건의사항·오류 제보 안내 문구를 붉은 계열로 변경(페이지 하단·업데이트 내역 제목줄)",
@@ -1237,7 +1239,7 @@ function renderEightWeekModal(container){
   overlay.onclick = (e)=>{ if(e.target === overlay){ overlay.remove(); state.eightWeekModalOpen = false; renderers.jabo(container); } };
 
   const box = el('div');
-  box.style.cssText = 'background:#fff;border-radius:14px;max-width:860px;width:100%;max-height:90vh;overflow-y:auto;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,0.3);';
+  box.style.cssText = 'background:#fff;border-radius:14px;max-width:1100px;width:100%;max-height:90vh;overflow-y:auto;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,0.3);';
 
   const boxHeader = el('div');
   boxHeader.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;';
@@ -1264,6 +1266,8 @@ function renderEightWeekModal(container){
     if(nb) nb.scrollTop = st;
   }
 
+  const detSlot = el('div');   // 재평가 결과 붉은 상자를 맨 위에 배치
+  input.appendChild(detSlot);
   input.appendChild(el('div','section-title','고령환자 / 장애인'));
   const disabledGrp = el('div','tag-group');
   disabledGrp.appendChild(tagBtn('고령환자(만65세 이상)', ew.elderly, ()=>{ ew.elderly = !ew.elderly; rerenderModal(); }));
@@ -1358,7 +1362,7 @@ function renderEightWeekModal(container){
   const sm = ew.summary;
   const det = el('details');
   det.open = !!sm.open;
-  det.style.cssText = 'margin-top:16px;border:2px solid #c0392b;border-radius:10px;padding:8px 12px 12px;background:#fff7f6;';
+  det.style.cssText = 'margin:0 0 8px;border:2px solid #c0392b;border-radius:10px;padding:8px 12px 12px;background:#fff7f6;';
   det.addEventListener('toggle', ()=>{ sm.open = det.open; });
   const dsum = el('summary', null, '재평가 결과 (선택 · 선택한 항목은 줄글로 덧붙음)');
   dsum.style.cssText = 'cursor:pointer;font-weight:700;color:#c0392b;font-size:14.5px;padding:2px 0;';
@@ -1382,7 +1386,7 @@ function renderEightWeekModal(container){
   det.appendChild(dateRow('초진일','first'));
   det.appendChild(dateRow('재평가일','re','(비우면 오늘 날짜 자동)'));
 
-  det.appendChild(subTitle('통증·기능 (NRS는 위 "치료 경과"의 현재 NRS를 사용)'));
+  det.appendChild(subTitle('통증·기능 (NRS는 아래 "치료 경과"의 NRS를 사용)'));
   const g1 = el('div','tag-group');
   EW_COND.forEach(c=> g1.appendChild(tagBtn('평가 조건: '+c, sm.cond===c, ()=>{ sm.cond = (sm.cond===c ? null : c); sm.open = true; rerenderModal(); })));
   det.appendChild(g1);
@@ -1421,7 +1425,7 @@ function renderEightWeekModal(container){
   const g7 = el('div','tag-group');
   EW_RECHECK.forEach(q=> g7.appendChild(tagBtn('재평가 '+q, sm.recheck===q, ()=>{ sm.recheck = (sm.recheck===q ? null : q); sm.open = true; rerenderModal(); })));
   det.appendChild(g7);
-  input.appendChild(det);
+  detSlot.appendChild(det);
 
   grid.appendChild(input);
   const preview = outputPanel('eightWeek', '8주 소견');
@@ -1547,7 +1551,7 @@ function renderReviewCertModal(){
   overlay.onclick = (e)=>{ if(e.target === overlay) close(); };
 
   const box = el('div');
-  box.style.cssText = 'background:#fff;border-radius:14px;max-width:760px;width:100%;max-height:90vh;overflow-y:auto;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,0.3);';
+  box.style.cssText = 'background:#fff;border-radius:14px;max-width:1100px;width:100%;max-height:90vh;overflow-y:auto;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,0.3);';
 
   const textEls = {};
   let endEl = null;
